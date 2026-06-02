@@ -67,7 +67,7 @@ if st.button("🔍 Analisar documentos", disabled=not (bs_files and gta_files), 
         try:
             client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
             message = client.messages.create(
-                model="claude-sonnet-4-20250514",
+                model="claude-sonnet-4-5",
                 max_tokens=4000,
                 system=SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": f"Analise:\n{bs_text}\n{gta_text}"}]
