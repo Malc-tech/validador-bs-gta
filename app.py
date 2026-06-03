@@ -73,7 +73,7 @@ VALIDAÇÕES:
    - Compare aves programadas no BS com TOTAL na GTA. Se diferente: ERRO.
    - Compare aviário/núcleo do BS com o da GTA. Se diferente: ERRO.
    - Compare SIF destino. Se diferente: ERRO.
-   - Se GTA listada no BS não foi fornecida: ALERTA.
+   - Se GTA listada no BS não foi fornecida nos arquivos enviados: SEMPRE retornar ALERTA informando o número da GTA faltante. Isso é obrigatório independente de qualquer outra validação.
 
 2. MORTALIDADE:
    Fórmula: (total_pintos_alojados - remanescentes_1o_carregamento - programadas_1o_carregamento) / total_pintos_alojados * 100
@@ -165,7 +165,13 @@ if st.button("🔍 Analisar documentos", disabled=not (bs_files and gta_files), 
             st.divider()
 
             if not result.get("tem_problemas") or not any(n.get("erros") or n.get("alertas") for n in nucleos):
-                st.success(f"✅ Documento aprovado\n\n**{produtor}** — Lote {lote} — Abate {data_abate}\n\nNenhuma inconsistência encontrada.")
+                st.success(f"✅ Documento aprovado — **{produtor}** — Lote {lote} — Abate {data_abate}")
+                st.markdown(                    """
+                    <div style="text-align:center; padding: 2rem 0;">
+                        <p style="font-size:3rem; font-weight:900; color:#15803d; margin:0; line-height:1.1;">TUDO OK!</p>
+                        <p style="font-size:1.4rem; font-weight:700; color:#15803d; margin-top:0.5rem;">PODE ASSINAR A PROGRAMAÇÃO ✅</p>
+                    </div>
+                    """, unsafe_allow_html=True)
             else:
                 tem_erro = any(n.get("erros") for n in nucleos)
                 if tem_erro:
