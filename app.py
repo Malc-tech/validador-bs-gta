@@ -33,9 +33,9 @@ NEBULIZAÇÃO (todos 0 dias): AVT 450, AVT-40, Farmasept Plus, Farmasept 40, Ger
 
 REGRA DE CARÊNCIA:
 - Medicamentos com 0 dias: data_fim pode ser igual à data do abate — OK, nunca retornar erro.
-- Medicamentos com N dias: some N+1 dias à data_fim. Se o resultado for <= data_abate: OK, não retornar nada. Se for > data_abate: ERRO.
-- Exemplo: Maxiban 8 dias, data_fim 10/05, abate 18/05 → 10/05 + 9 dias = 19/05 > 18/05 → ERRO.
-- Exemplo: Maxiban 8 dias, data_fim 10/05, abate 19/05 → 10/05 + 9 dias = 19/05 <= 19/05 → OK, não retornar.
+- Medicamentos com N dias: some N+1 dias à data_fim. Se data_abate >= resultado: OK, não retornar nada. Se data_abate < resultado: ERRO (abate antes da carência ser cumprida).
+- Exemplo: Maxiban 8 dias, data_fim 10/05, abate 18/05 → 10/05 + 9 dias = 19/05, abate 18/05 < 19/05 → ERRO (abate antes da carência).
+- Exemplo: Maxiban 8 dias, data_fim 10/05, abate 19/05 → 10/05 + 9 dias = 19/05, abate 19/05 >= 19/05 → OK, não retornar.
 - NUNCA retornar medicamentos que estão dentro da carência.
 """
 
