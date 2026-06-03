@@ -30,22 +30,67 @@ MEDICAMENTOS VIA ORAL:
 - Trimelor 75: 4 dias
 - Farmaflor, Neobase, Acquaneutra, Activo Liquido, Biohidract, Bronk Clean, Ceitz E.F. Plus, Neoflora, Oligoacid, Perform-Max, Polimeve, Mentovest: 0 dias
 NEBULIZAÇÃO (todos 0 dias): AVT 450, AVT-40, Farmasept Plus, Farmasept 40, Germon Plus, Timsen, Virkon, VirukIII
-REGRA: 0 dias = data_fim pode ser igual ao abate. N dias = data_fim + N <= data_abate, senão ERRO.
+
+REGRA DE CARÊNCIA:
+- Medicamentos com 0 dias: data_fim pode ser igual à data do abate — OK, nunca retornar erro.
+- Medicamentos com N dias: some N+1 dias à data_fim. Se o resultado for <= data_abate: OK, não retornar nada. Se for > data_abate: ERRO.
+- Exemplo: Maxiban 8 dias, data_fim 10/05, abate 18/05 → 10/05 + 9 dias = 19/05 > 18/05 → ERRO.
+- Exemplo: Maxiban 8 dias, data_fim 10/05, abate 19/05 → 10/05 + 9 dias = 19/05 <= 19/05 → OK, não retornar.
+- NUNCA retornar medicamentos que estão dentro da carência.
 """
 
 SYSTEM_PROMPT = """Você é especialista em documentos veterinários de frigoríficos de frango da LAR Cooperativa Agroindustrial.
-Analise o BS e as GTAs. Retorne APENAS problemas encontrados. Itens corretos NÃO aparecem.
+Analise o BS e as GTAs. Retorne APENAS problemas encontrados. Itens corretos NÃO aparecem na resposta.
 
-MEDICAMENTOS:""" + MEDICATION_LIST + """
+MEDICAMENTOS E CARÊNCIAS:
+""" + MEDICATION_LIST + """
 
 VALIDAÇÕES:
-1. CRUZAMENTO BS x GTA (só GTAs fornecidas): compare aves programadas, aviário e SIF. Se diferente: ERRO. Se GTA do BS não fornecida: ALERTA.
-2. MORTALIDADE: (total_pintos - remanescentes_1o - programadas_1o) / total_pintos * 100. Se diferença > 0.05% do declarado: ERRO. Se mortalidade<=5% mas tem observação de acima de 5%: ALERTA.
-3. MEDICAMENTOS: se não está na lista: ALERTA. Se data_fim + carencia > data_abate: ERRO.
-4. CAMPOS OBRIGATÓRIOS ausentes: ERRO.
+
+1. CRUZAMENTO BS x GTA (só GTAs fornecidas):
+   - Compare aves programadas no BS com TOTAL na GTA. Se diferente: ERRO.
+   - Compare aviário/núcleo do BS com o da GTA. Se diferente: ERRO.
+   - Compare SIF destino. Se diferente: ERRO.
+   - Se GTA listada no BS não foi fornecida: ALERTA.
+
+2. MORTALIDADE:
+   Fórmula: (total_pintos_alojados - remanescentes_1o_carregamento - programadas_1o_carregamento) / total_pintos_alojados * 100
+   - Se mortalidade calculada > 5% E a mensagem de declaração "MORTALIDADE ACIMA DE 5%" NÃO constar no BS: ERRO simples, sem mostrar cálculos.
+   - Se mortalidade calculada <= 5% E a mensagem "MORTALIDADE ACIMA DE 5%" CONSTAR no BS: apenas ALERTA simples, sem mostrar cálculos.
+   - Se o valor calculado divergir do declarado no BS (considerando arredondamentos): apenas ALERTA simples, sem mostrar os números do cálculo.
+   - Se tudo estiver correto: não retornar nada sobre mortalidade.
+
+3. MEDICAMENTOS:
+   - Aplicar exatamente a REGRA DE CARÊNCIA descrita acima.
+   - Se medicamento não estiver na lista oficial: ALERTA.
+   - NUNCA retornar medicamentos OK.
+
+4. CAMPOS OBRIGATÓRIOS ausentes ou em branco: ERRO.
+   Campos: nome estabelecimento, georreferenciamento, município/UF, cadastro SVO, lote/núcleo, nº galpões, médico veterinário CRMV, data alojamento, GTA pintos, nº pintos alojados, data carregamento, resultado salmonela.
+
+ORGANIZAÇÃO DA RESPOSTA:
+- Agrupe todos os erros e alertas por NÚCLEO.
+- Para cada núcleo, informe quais aviários estão relacionados ao problema.
+- Seja objetivo: apenas o problema, sem explicações longas.
 
 Retorne SOMENTE JSON sem markdown:
-{"produtor":"","lote":"","data_abate":"","tem_problemas":false,"erros":[{"categoria":"GTA|Mortalidade|Medicamento|Campo","item":"","detalhe":""}],"alertas":[{"categoria":"GTA|Mortalidade|Medicamento|Campo","item":"","detalhe":""}]}"""
+{
+  "produtor": "",
+  "lote": "",
+  "data_abate": "",
+  "tem_problemas": false,
+  "nucleos": [
+    {
+      "nucleo": "número do núcleo",
+      "aviarios": "aviários relacionados ex: 3015, 3016",
+      "erros": [{"categoria": "GTA|Mortalidade|Medicamento|Campo", "item": "", "detalhe": ""}],
+      "alertas": [{"categoria": "GTA|Mortalidade|Medicamento|Campo", "item": "", "detalhe": ""}]
+    }
+  ]
+}
+
+Se não houver nenhum problema, retorne nucleos:[] e tem_problemas:false.
+"""
 
 def extract_text(uploaded_file):
     data = uploaded_file.read()
@@ -72,33 +117,45 @@ if st.button("🔍 Analisar documentos", disabled=not (bs_files and gta_files), 
                 system=SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": f"Analise:\n{bs_text}\n{gta_text}"}]
             )
-            raw = message.content[0].text.replace("```json","").replace("```","").strip()
+            raw = message.content[0].text.replace("```json", "").replace("```", "").strip()
             result = json.loads(raw)
 
-            erros = result.get("erros", [])
-            alertas = result.get("alertas", [])
+            nucleos = result.get("nucleos", [])
             produtor = result.get("produtor", "")
             lote = result.get("lote", "")
             data_abate = result.get("data_abate", "")
 
             st.divider()
 
-            if not result.get("tem_problemas") or (not erros and not alertas):
+            if not result.get("tem_problemas") or not nucleos:
                 st.success(f"✅ Documento aprovado\n\n**{produtor}** — Lote {lote} — Abate {data_abate}\n\nNenhuma inconsistência encontrada.")
             else:
-                if erros:
+                tem_erro = any(n.get("erros") for n in nucleos)
+                if tem_erro:
                     st.error(f"**{produtor}** — Lote {lote} — Abate {data_abate}")
-                    for cat in set(e["categoria"] for e in erros):
-                        st.markdown(f"**❌ {cat}**")
-                        for e in [x for x in erros if x["categoria"] == cat]:
-                            st.markdown(f"- **{e['item']}**: {e['detalhe']}")
-                if alertas:
-                    if not erros:
-                        st.warning(f"**{produtor}** — Lote {lote} — Abate {data_abate}")
-                    for cat in set(a["categoria"] for a in alertas):
-                        st.markdown(f"**⚠️ {cat}**")
-                        for a in [x for x in alertas if x["categoria"] == cat]:
-                            st.markdown(f"- **{a['item']}**: {a['detalhe']}")
+                else:
+                    st.warning(f"**{produtor}** — Lote {lote} — Abate {data_abate}")
+
+                for nucleo in nucleos:
+                    n_num = nucleo.get("nucleo", "")
+                    aviarios = nucleo.get("aviarios", "")
+                    erros = nucleo.get("erros", [])
+                    alertas = nucleo.get("alertas", [])
+
+                    if not erros and not alertas:
+                        continue
+
+                    with st.expander(f"🏠 Núcleo {n_num} — Aviários: {aviarios}", expanded=True):
+                        if erros:
+                            for cat in set(e["categoria"] for e in erros):
+                                st.markdown(f"**❌ {cat}**")
+                                for e in [x for x in erros if x["categoria"] == cat]:
+                                    st.markdown(f"- **{e['item']}**: {e['detalhe']}")
+                        if alertas:
+                            for cat in set(a["categoria"] for a in alertas):
+                                st.markdown(f"**⚠️ {cat}**")
+                                for a in [x for x in alertas if x["categoria"] == cat]:
+                                    st.markdown(f"- **{a['item']}**: {a['detalhe']}")
 
         except json.JSONDecodeError:
             st.error("Erro ao interpretar resposta da IA. Tente novamente.")
