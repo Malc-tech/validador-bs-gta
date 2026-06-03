@@ -2,52 +2,70 @@ import streamlit as st
 import anthropic
 import fitz
 import json
+from datetime import datetime, timedelta
 
 st.set_page_config(page_title="Validador BS e GTA — LAR", page_icon="✅")
 st.title("Validador de BS e GTA")
 st.caption("LAR Cooperativa Agroindustrial — SIF 797")
 
-MEDICATION_LIST = """
-ANTICOCCIDIANOS NAS RAÇÕES - carência em dias antes do abate:
-- Aviax Plus (Semduramicina+Nicarbazina): 10 dias
-- Maxiban (Narasina+Nicarbazina): 8 dias
-- Monimax (Monensina+Nicarbazina): 9 dias
-- Nicarmix 25 (Nicarbazina): 10 dias
-- Monteban G100 (Narasina): 8 dias
-- Linco-Spectin 440 (Lincomicina+Espectinomicina): 0 dias
-- Spectomix (Lincomicina+Espectinomicina): 4 dias
-- Coxifarm M40 (Monensina): 0 dias
-- Avatec 20 (Lasalocida): 5 dias
-- Zoocox (Dinitolmida): 0 dias
-- Salinacox 240 (Salinomicina): 0 dias
-- Coxifarm S (Salinomicina): 0 dias
-- Coxifarm Plus (Salinomicina+Diclazuril): 0 dias
-MEDICAMENTOS VIA ORAL:
-- Diatrim: 5 dias
-- Linco-Spectin: 2 dias
-- Lincofarm TI: 2 dias
-- Spectomix: 4 dias
-- Trimelor 75: 4 dias
-- Farmaflor, Neobase, Acquaneutra, Activo Liquido, Biohidract, Bronk Clean, Ceitz E.F. Plus, Neoflora, Oligoacid, Perform-Max, Polimeve, Mentovest: 0 dias
-NEBULIZAÇÃO (todos 0 dias): AVT 450, AVT-40, Farmasept Plus, Farmasept 40, Germon Plus, Timsen, Virkon, VirukIII
+# Carências oficiais (dias + 1 extra)
+CARENCIAS = {
+    "aviax plus": 11, "maxiban": 9, "monimax": 10, "nicarmix 25": 11,
+    "monteban g100": 9, "linco-spectin 440": 1, "spectomix": 5,
+    "coxifarm m40": 1, "avatec 20": 6, "zoocox": 1, "salinacox 240": 1,
+    "coxifarm s": 1, "coxifarm plus": 1, "diatrim": 6, "linco-spectin": 3,
+    "lincofarm ti": 3, "trimelor 75": 5, "farmaflor": 1, "neobase": 1,
+    "acquaneutra": 1, "activo liquido": 1, "biohidract": 1, "bronk clean": 1,
+    "ceitz e.f. plus": 1, "neoflora": 1, "oligoacid": 1, "perform-max": 1,
+    "polimeve": 1, "mentovest": 1, "avt 450": 1, "avt-40": 1,
+    "farmasept plus": 1, "farmasept 40": 1, "germon plus": 1,
+    "timsen": 1, "virkon": 1, "virukiii": 1,
+}
 
-REGRA DE CARÊNCIA — LEIA COM ATENÇÃO:
-- Medicamentos com 0 dias: sempre OK, nunca retornar erro.
-- Medicamentos com N dias: calcule DATA_LIMITE = data_fim + (N + 1) dias.
-  Se data_abate >= DATA_LIMITE: APROVADO, não retornar nada.
-  Se data_abate < DATA_LIMITE: ERRO.
-- ATENÇÃO: compare as datas corretamente considerando mês e ano. Uma data em junho é SEMPRE posterior a uma data em maio do mesmo ano.
-- Exemplos corretos:
-  Maxiban 8 dias, data_fim 14/05/2026, abate 01/06/2026 → DATA_LIMITE = 14/05 + 9 = 23/05/2026. Abate 01/06/2026 > 23/05/2026 → APROVADO, não retornar.
-  Maxiban 8 dias, data_fim 14/05/2026, abate 20/05/2026 → DATA_LIMITE = 23/05/2026. Abate 20/05/2026 < 23/05/2026 → ERRO.
-- NUNCA retornar medicamentos aprovados.
-"""
+def parse_date(s):
+    for fmt in ("%d/%m/%Y", "%d/%m/%y"):
+        try:
+            return datetime.strptime(s.strip(), fmt)
+        except:
+            pass
+    return None
+
+def verificar_carencias(medicamentos_bs, data_abate_str):
+    """Recebe lista de dicts {nome, data_fim} e data do abate. Retorna lista de erros."""
+    data_abate = parse_date(data_abate_str)
+    if not data_abate:
+        return []
+    erros = []
+    for med in medicamentos_bs:
+        nome = med.get("nome", "").lower().strip()
+        data_fim_str = med.get("data_fim", "")
+        if not data_fim_str:
+            continue
+        data_fim = parse_date(data_fim_str)
+        if not data_fim:
+            continue
+        # Encontrar carência
+        dias = None
+        for key, val in CARENCIAS.items():
+            if key in nome or nome in key:
+                dias = val
+                break
+        if dias is None:
+            continue  # medicamento não reconhecido, IA vai alertar
+        if dias <= 1:
+            continue  # carência 0 dias (+ 1 extra = 1), data_fim pode ser igual ao abate
+        data_limite = data_fim + timedelta(days=dias)
+        if data_abate < data_limite:
+            erros.append({
+                "nome": med.get("nome"),
+                "data_fim": data_fim_str,
+                "data_limite": data_limite.strftime("%d/%m/%Y"),
+                "data_abate": data_abate_str
+            })
+    return erros
 
 SYSTEM_PROMPT = """Você é especialista em documentos veterinários de frigoríficos de frango da LAR Cooperativa Agroindustrial.
-Analise o BS e as GTAs. Retorne APENAS problemas encontrados. Itens corretos NÃO aparecem na resposta.
-
-MEDICAMENTOS E CARÊNCIAS:
-""" + MEDICATION_LIST + """
+Analise o BS e as GTAs. Retorne APENAS problemas encontrados. Itens corretos NÃO aparecem.
 
 VALIDAÇÕES:
 
@@ -59,23 +77,21 @@ VALIDAÇÕES:
 
 2. MORTALIDADE:
    Fórmula: (total_pintos_alojados - remanescentes_1o_carregamento - programadas_1o_carregamento) / total_pintos_alojados * 100
-   - Se mortalidade calculada > 5% E a mensagem de declaração "MORTALIDADE ACIMA DE 5%" NÃO constar no BS: ERRO simples, sem mostrar cálculos.
-   - Se mortalidade calculada <= 5% E a mensagem "MORTALIDADE ACIMA DE 5%" CONSTAR no BS: apenas ALERTA simples, sem mostrar cálculos.
-   - Se o valor calculado divergir do declarado no BS (considerando arredondamentos): apenas ALERTA simples, sem mostrar os números do cálculo.
-   - Se tudo estiver correto: não retornar nada sobre mortalidade.
+   - Se mortalidade calculada > 5% E a mensagem "MORTALIDADE ACIMA DE 5%" NÃO constar no BS: ERRO simples sem mostrar cálculos.
+   - Se mortalidade calculada <= 5% E a mensagem "MORTALIDADE ACIMA DE 5%" CONSTAR no BS: ALERTA simples sem mostrar cálculos.
+   - Se o valor calculado divergir do declarado (considerando arredondamentos): ALERTA simples sem mostrar cálculos.
+   - Se tudo correto: não retornar nada sobre mortalidade.
 
-3. MEDICAMENTOS:
-   - Aplicar exatamente a REGRA DE CARÊNCIA descrita acima.
+3. MEDICAMENTOS — APENAS:
    - Se medicamento não estiver na lista oficial: ALERTA.
-   - NUNCA retornar medicamentos OK.
+   - NÃO calcule carência — isso já foi calculado pelo sistema. Apenas liste os medicamentos presentes para que o sistema possa verificar.
 
-4. CAMPOS OBRIGATÓRIOS ausentes ou em branco: ERRO.
+4. CAMPOS OBRIGATÓRIOS ausentes: ERRO.
    Campos: nome estabelecimento, georreferenciamento, município/UF, cadastro SVO, lote/núcleo, nº galpões, médico veterinário CRMV, data alojamento, GTA pintos, nº pintos alojados, data carregamento, resultado salmonela.
 
-ORGANIZAÇÃO DA RESPOSTA:
-- Agrupe todos os erros e alertas por NÚCLEO.
-- Para cada núcleo, informe quais aviários estão relacionados ao problema.
-- Seja objetivo: apenas o problema, sem explicações longas.
+5. EXTRAÇÃO DE MEDICAMENTOS — inclua no JSON todos os medicamentos encontrados no BS com nome e data_fim (se houver).
+
+ORGANIZAÇÃO: agrupe por núcleo informando os aviários relacionados.
 
 Retorne SOMENTE JSON sem markdown:
 {
@@ -83,18 +99,16 @@ Retorne SOMENTE JSON sem markdown:
   "lote": "",
   "data_abate": "",
   "tem_problemas": false,
+  "medicamentos_encontrados": [{"nome": "", "data_fim": "dd/mm/aaaa ou null"}],
   "nucleos": [
     {
-      "nucleo": "número do núcleo",
-      "aviarios": "aviários relacionados ex: 3015, 3016",
-      "erros": [{"categoria": "GTA|Mortalidade|Medicamento|Campo", "item": "", "detalhe": ""}],
+      "nucleo": "",
+      "aviarios": "",
+      "erros": [{"categoria": "GTA|Mortalidade|Campo", "item": "", "detalhe": ""}],
       "alertas": [{"categoria": "GTA|Mortalidade|Medicamento|Campo", "item": "", "detalhe": ""}]
     }
   ]
-}
-
-Se não houver nenhum problema, retorne nucleos:[] e tem_problemas:false.
-"""
+}"""
 
 def extract_text(uploaded_file):
     data = uploaded_file.read()
@@ -124,14 +138,33 @@ if st.button("🔍 Analisar documentos", disabled=not (bs_files and gta_files), 
             raw = message.content[0].text.replace("```json", "").replace("```", "").strip()
             result = json.loads(raw)
 
+            # Verificar carências no Python (confiável)
+            meds = result.get("medicamentos_encontrados", [])
+            data_abate = result.get("data_abate", "")
+            erros_carencia = verificar_carencias(meds, data_abate)
+
             nucleos = result.get("nucleos", [])
             produtor = result.get("produtor", "")
             lote = result.get("lote", "")
-            data_abate = result.get("data_abate", "")
+
+            # Adicionar erros de carência ao primeiro núcleo ou criar um geral
+            if erros_carencia:
+                result["tem_problemas"] = True
+                erro_msgs = []
+                for ec in erros_carencia:
+                    erro_msgs.append({
+                        "categoria": "Medicamento",
+                        "item": ec["nome"],
+                        "detalhe": f"Carência não cumprida. Liberado a partir de {ec['data_limite']}, abate em {ec['data_abate']}."
+                    })
+                if nucleos:
+                    nucleos[0]["erros"] = nucleos[0].get("erros", []) + erro_msgs
+                else:
+                    nucleos.append({"nucleo": "Geral", "aviarios": "-", "erros": erro_msgs, "alertas": []})
 
             st.divider()
 
-            if not result.get("tem_problemas") or not nucleos:
+            if not result.get("tem_problemas") or not any(n.get("erros") or n.get("alertas") for n in nucleos):
                 st.success(f"✅ Documento aprovado\n\n**{produtor}** — Lote {lote} — Abate {data_abate}\n\nNenhuma inconsistência encontrada.")
             else:
                 tem_erro = any(n.get("erros") for n in nucleos)
@@ -141,14 +174,12 @@ if st.button("🔍 Analisar documentos", disabled=not (bs_files and gta_files), 
                     st.warning(f"**{produtor}** — Lote {lote} — Abate {data_abate}")
 
                 for nucleo in nucleos:
-                    n_num = nucleo.get("nucleo", "")
-                    aviarios = nucleo.get("aviarios", "")
                     erros = nucleo.get("erros", [])
                     alertas = nucleo.get("alertas", [])
-
                     if not erros and not alertas:
                         continue
-
+                    n_num = nucleo.get("nucleo", "")
+                    aviarios = nucleo.get("aviarios", "")
                     with st.expander(f"🏠 Núcleo {n_num} — Aviários: {aviarios}", expanded=True):
                         if erros:
                             for cat in set(e["categoria"] for e in erros):
