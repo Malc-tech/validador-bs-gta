@@ -4,11 +4,260 @@ import fitz
 import json
 from datetime import datetime, timedelta
 
-st.set_page_config(page_title="Validador BS e GTA — LAR", page_icon="✅")
-st.title("Validador de BS e GTA")
-st.caption("LAR Cooperativa Agroindustrial — SIF 797")
+st.set_page_config(page_title="Validador BS e GTA — LAR", page_icon="🐔", layout="wide")
 
-# Carências oficiais (dias + 1 extra)
+# CSS global
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap');
+
+html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+
+.lar-header {
+    background: linear-gradient(135deg, #003d1a 0%, #006629 50%, #003d1a 100%);
+    border-radius: 20px;
+    padding: 1.5rem 2rem 0.5rem 2rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    border: 3px solid #FFDF00;
+    position: relative;
+    overflow: hidden;
+}
+.lar-logo {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 6rem;
+    color: #FFDF00;
+    letter-spacing: 0.3em;
+    line-height: 1;
+    text-shadow: 4px 4px 0px #003d1a, 6px 6px 0px rgba(0,0,0,0.3);
+    margin: 0;
+}
+.lar-sub {
+    color: #ffffff;
+    font-size: 0.9rem;
+    letter-spacing: 0.2em;
+    margin-top: -0.3rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.85;
+}
+.frangos-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 6px;
+    padding: 0.5rem 0;
+    flex-wrap: wrap;
+    min-height: 130px;
+}
+.frango-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+.frango-nome {
+    font-size: 9px;
+    color: #FFDF00;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-align: center;
+    max-width: 70px;
+}
+
+/* Animação chute */
+@keyframes chute {
+    0%   { transform: rotate(0deg) translateY(0); }
+    20%  { transform: rotate(-15deg) translateY(-5px); }
+    40%  { transform: rotate(20deg) translateY(-10px); }
+    60%  { transform: rotate(-10deg) translateY(-5px); }
+    80%  { transform: rotate(10deg) translateY(-3px); }
+    100% { transform: rotate(0deg) translateY(0); }
+}
+@keyframes bola-voo {
+    0%   { transform: translateX(0) translateY(0) rotate(0deg); opacity:1; }
+    100% { transform: translateX(120px) translateY(-60px) rotate(360deg); opacity:0; }
+}
+.animando .frango-svg { animation: chute 0.8s ease-in-out 3; }
+.animando .bola-svg  { animation: bola-voo 0.8s ease-in-out 3 forwards; }
+
+.stButton > button {
+    background: linear-gradient(135deg, #009c3b, #006629) !important;
+    color: #FFDF00 !important;
+    font-weight: 700 !important;
+    font-size: 1.1rem !important;
+    border: 2px solid #FFDF00 !important;
+    border-radius: 12px !important;
+    padding: 0.6rem 2rem !important;
+    letter-spacing: 0.05em !important;
+}
+.stButton > button:hover {
+    background: linear-gradient(135deg, #FFDF00, #ffc800) !important;
+    color: #003d1a !important;
+}
+
+.tudo-ok {
+    background: linear-gradient(135deg, #003d1a, #006629);
+    border: 3px solid #FFDF00;
+    border-radius: 16px;
+    padding: 3rem;
+    text-align: center;
+    margin: 1rem 0;
+}
+.tudo-ok-titulo {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 4rem;
+    color: #FFDF00;
+    letter-spacing: 0.2em;
+    margin: 0;
+    text-shadow: 3px 3px 0px #003d1a;
+}
+.tudo-ok-sub {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-top: 0.5rem;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# SVG de cada frango
+def frango_svg(nome, numero, sexo, faixa_amarela_2=False, faixa_laranja=False, pintinho=False):
+    escala = 0.7 if pintinho else 1.0
+    h = int(110 * escala)
+    w = int(70 * escala)
+    sx = escala
+    # cores
+    pele = "#FDE68A"
+    camisa = "#009c3b"
+    faixa = "#FFDF00"
+    crista = "#ef4444" if sexo == "galo" else "#f97316"
+    barb = "#ef4444"
+
+    fa2 = faixa_amarela_2
+    flo = faixa_laranja
+
+    svg = f"""<svg class="frango-svg" width="{w}" height="{h}" viewBox="0 0 70 110" xmlns="http://www.w3.org/2000/svg">
+  <!-- Corpo -->
+  <ellipse cx="35" cy="72" rx="22" ry="26" fill="{camisa}"/>
+  <!-- Faixa camisa -->
+  <ellipse cx="35" cy="60" rx="20" ry="5" fill="{faixa}"/>
+  <!-- Número -->
+  <text x="35" y="80" text-anchor="middle" font-family="Arial Black" font-size="9" font-weight="900" fill="{faixa}">{numero}</text>
+  <!-- Pescoço -->
+  <rect x="29" y="42" width="12" height="10" fill="{pele}" rx="3"/>
+  <!-- Cabeça -->
+  <ellipse cx="35" cy="34" rx="18" ry="17" fill="{pele}"/>
+  <!-- Crista -->"""
+    if sexo == "galo":
+        svg += f"""
+  <path d="M35,18 Q38,10 42,17 Q46,8 49,17 Q44,20 35,21Z" fill="{crista}"/>"""
+    else:
+        svg += f"""
+  <path d="M33,18 Q35,12 37,18 Q39,10 41,18 Q37,20 33,20Z" fill="{crista}"/>"""
+    svg += f"""
+  <!-- Bico -->
+  <path d="M35,36 L42,39 L35,42Z" fill="#f97316"/>
+  <path d="M35,36 L28,39 L35,42Z" fill="#fb923c"/>
+  <!-- Olhos -->
+  <ellipse cx="27" cy="30" rx="5" ry="5.5" fill="white"/>
+  <ellipse cx="28" cy="30" rx="3" ry="3.5" fill="#1e293b"/>
+  <ellipse cx="29" cy="28" rx="1.2" ry="1.2" fill="white"/>
+  <ellipse cx="43" cy="30" rx="5" ry="5.5" fill="white"/>
+  <ellipse cx="44" cy="30" rx="3" ry="3.5" fill="#1e293b"/>
+  <ellipse cx="45" cy="28" rx="1.2" ry="1.2" fill="white"/>
+  <!-- Bochecha -->
+  <ellipse cx="20" cy="36" rx="4" ry="3" fill="#fca5a5" opacity="0.6"/>
+  <ellipse cx="50" cy="36" rx="4" ry="3" fill="#fca5a5" opacity="0.6"/>
+  <!-- Barbela -->"""
+    if sexo == "galo":
+        svg += f"""
+  <path d="M33,42 Q28,50 31,56 Q35,60 39,56 Q42,50 37,42Z" fill="{barb}"/>"""
+    else:
+        svg += f"""
+  <path d="M34,42 Q31,47 33,51 Q35,54 37,51 Q39,47 36,42Z" fill="{barb}"/>"""
+
+    # Braços / asas
+    fa_cor_esq = "#FFDF00" if fa2 else camisa
+    fa_cor_dir = "#FF6B00" if flo else ("#FFDF00" if fa2 else camisa)
+
+    svg += f"""
+  <!-- Asa esquerda -->
+  <path d="M13,62 Q5,55 4,46 Q6,40 11,44 Q14,52 18,60Z" fill="{pele}"/>
+  <!-- Faixa esq -->
+  <path d="M10,52 Q7,50 6,46 Q8,44 10,47 Q11,50 12,53Z" fill="{fa_cor_esq}"/>
+  <!-- Asa direita -->
+  <path d="M57,62 Q65,55 66,46 Q64,40 59,44 Q56,52 52,60Z" fill="{pele}"/>
+  <!-- Faixa dir -->
+  <path d="M60,52 Q63,50 64,46 Q62,44 60,47 Q59,50 58,53Z" fill="{fa_cor_dir}"/>
+  <!-- Pernas -->
+  <path d="M28,95 Q24,105 22,108" fill="none" stroke="#d97706" stroke-width="5" stroke-linecap="round"/>
+  <path d="M42,95 Q48,103 52,107" fill="none" stroke="#d97706" stroke-width="5" stroke-linecap="round"/>
+  <!-- Chuteiras -->
+  <ellipse cx="21" cy="108" rx="7" ry="3.5" fill="#1e293b" transform="rotate(-10,21,108)"/>
+  <ellipse cx="53" cy="107" rx="7" ry="3.5" fill="#1e293b" transform="rotate(20,53,107)"/>
+  <!-- Nome na camisa -->
+  <text x="35" y="70" text-anchor="middle" font-family="Arial" font-size="5.5" font-weight="700" fill="{faixa}">{nome[:7]}</text>
+</svg>"""
+    return svg
+
+def bola_svg(pequena=False):
+    s = 18 if pequena else 24
+    return f"""<svg class="bola-svg" width="{s}" height="{s}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="12" cy="12" r="11" fill="white" stroke="#9ca3af" stroke-width="1"/>
+  <polygon points="12,4 16,8 14,13 10,13 8,8" fill="#1e293b"/>
+  <polygon points="16,8 21,9 21,15 17,17 14,13" fill="none" stroke="#9ca3af" stroke-width="0.8"/>
+  <polygon points="8,8 3,9 3,15 7,17 10,13" fill="none" stroke="#9ca3af" stroke-width="0.8"/>
+</svg>"""
+
+# Dados dos colaboradores
+colaboradores = [
+    {"nome": "Hagatah",    "numero": "7",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False},
+    {"nome": "Sarah",      "numero": "9",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False},
+    {"nome": "Sara",       "numero": "11", "sexo": "galinha", "fa2": True,  "flo": False, "pintinho": False},
+    {"nome": "Michael",    "numero": "10", "sexo": "galo",    "fa2": True,  "flo": False, "pintinho": False},
+    {"nome": "Edmar",      "numero": "5",  "sexo": "galo",    "fa2": False, "flo": True,  "pintinho": False},
+    {"nome": "M. Jovem",   "numero": "8",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": True},
+    {"nome": "Maria",      "numero": "3",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False},
+    {"nome": "Beatriz",    "numero": "6",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False},
+    {"nome": "Vinicius",   "numero": "4",  "sexo": "galo",    "fa2": False, "flo": False, "pintinho": True},
+]
+
+# Montar frangos HTML
+frangos_html = '<div class="frangos-container" id="frangos-field">'
+for c in colaboradores:
+    frangos_html += f'<div class="frango-wrap">'
+    frangos_html += frango_svg(c["nome"], c["numero"], c["sexo"], c["fa2"], c["flo"], c["pintinho"])
+    frangos_html += bola_svg(c["pintinho"])
+    frangos_html += f'<div class="frango-nome">{c["nome"]}</div>'
+    frangos_html += '</div>'
+frangos_html += '</div>'
+
+# Header
+st.markdown(f"""
+<div class="lar-header">
+  <p class="lar-logo">LAR</p>
+  <p class="lar-sub">COOPERATIVA AGROINDUSTRIAL &nbsp;·&nbsp; VALIDADOR BS e GTA &nbsp;·&nbsp; SIF 797</p>
+  {frangos_html}
+</div>
+""", unsafe_allow_html=True)
+
+# JS animação ao clicar
+st.markdown("""
+<script>
+function animarFrangos() {
+    var field = document.getElementById('frangos-field');
+    if (!field) return;
+    field.querySelectorAll('.frango-wrap').forEach(function(w) { w.classList.add('animando'); });
+    setTimeout(function() {
+        field.querySelectorAll('.frango-wrap').forEach(function(w) { w.classList.remove('animando'); });
+    }, 2500);
+}
+var btn = window.parent.document.querySelector('.stButton button');
+if (btn) { btn.addEventListener('click', animarFrangos); }
+</script>
+""", unsafe_allow_html=True)
+
+# Carências
 CARENCIAS = {
     "aviax plus": 11, "maxiban": 9, "monimax": 10, "nicarmix 25": 11,
     "monteban g100": 9, "linco-spectin 440": 1, "spectomix": 5,
@@ -31,7 +280,6 @@ def parse_date(s):
     return None
 
 def verificar_carencias(medicamentos_bs, data_abate_str):
-    """Recebe lista de dicts {nome, data_fim} e data do abate. Retorna lista de erros."""
     data_abate = parse_date(data_abate_str)
     if not data_abate:
         return []
@@ -44,16 +292,15 @@ def verificar_carencias(medicamentos_bs, data_abate_str):
         data_fim = parse_date(data_fim_str)
         if not data_fim:
             continue
-        # Encontrar carência
         dias = None
         for key, val in CARENCIAS.items():
             if key in nome or nome in key:
                 dias = val
                 break
         if dias is None:
-            continue  # medicamento não reconhecido, IA vai alertar
+            continue
         if dias <= 1:
-            continue  # carência 0 dias (+ 1 extra = 1), data_fim pode ser igual ao abate
+            continue
         data_limite = data_fim + timedelta(days=dias)
         if data_abate < data_limite:
             erros.append({
@@ -68,7 +315,6 @@ SYSTEM_PROMPT = """Você é especialista em documentos veterinários de frigorí
 Analise o BS e as GTAs. Retorne APENAS problemas encontrados. Itens corretos NÃO aparecem.
 
 VALIDAÇÕES:
-
 1. CRUZAMENTO BS x GTA (só GTAs fornecidas):
    - Compare aves programadas no BS com TOTAL na GTA. Se diferente: ERRO.
    - Compare aviário/núcleo do BS com o da GTA. Se diferente: ERRO.
@@ -84,31 +330,17 @@ VALIDAÇÕES:
 
 3. MEDICAMENTOS — APENAS:
    - Se medicamento não estiver na lista oficial: ALERTA.
-   - NÃO calcule carência — isso já foi calculado pelo sistema. Apenas liste os medicamentos presentes para que o sistema possa verificar.
+   - NÃO calcule carência — isso já foi calculado pelo sistema.
 
 4. CAMPOS OBRIGATÓRIOS ausentes: ERRO.
    Campos: nome estabelecimento, georreferenciamento, município/UF, cadastro SVO, lote/núcleo, nº galpões, médico veterinário CRMV, data alojamento, GTA pintos, nº pintos alojados, data carregamento, resultado salmonela.
 
-5. EXTRAÇÃO DE MEDICAMENTOS — inclua no JSON todos os medicamentos encontrados no BS com nome e data_fim (se houver).
+5. EXTRAÇÃO: inclua todos os medicamentos encontrados no BS com nome e data_fim.
 
 ORGANIZAÇÃO: agrupe por núcleo informando os aviários relacionados.
 
 Retorne SOMENTE JSON sem markdown:
-{
-  "produtor": "",
-  "lote": "",
-  "data_abate": "",
-  "tem_problemas": false,
-  "medicamentos_encontrados": [{"nome": "", "data_fim": "dd/mm/aaaa ou null"}],
-  "nucleos": [
-    {
-      "nucleo": "",
-      "aviarios": "",
-      "erros": [{"categoria": "GTA|Mortalidade|Campo", "item": "", "detalhe": ""}],
-      "alertas": [{"categoria": "GTA|Mortalidade|Medicamento|Campo", "item": "", "detalhe": ""}]
-    }
-  ]
-}"""
+{"produtor":"","lote":"","data_abate":"","tem_problemas":false,"medicamentos_encontrados":[{"nome":"","data_fim":"dd/mm/aaaa ou null"}],"nucleos":[{"nucleo":"","aviarios":"","erros":[{"categoria":"GTA|Mortalidade|Campo","item":"","detalhe":""}],"alertas":[{"categoria":"GTA|Mortalidade|Medicamento|Campo","item":"","detalhe":""}]}]}"""
 
 def extract_text(uploaded_file):
     data = uploaded_file.read()
@@ -121,12 +353,12 @@ with col1:
 with col2:
     gta_files = st.file_uploader("📋 GTAs", type="pdf", accept_multiple_files=True)
 
-if st.button("🔍 Analisar documentos", disabled=not (bs_files and gta_files), use_container_width=True, type="primary"):
-    with st.spinner("Extraindo texto dos PDFs..."):
+if st.button("⚽ Analisar documentos", disabled=not (bs_files and gta_files), use_container_width=True, type="primary"):
+    with st.spinner("🐔 Os frangos estão analisando..."):
         bs_text = "\n\n".join(f"--- BS: {f.name} ---\n{extract_text(f)}" for f in bs_files)
         gta_text = "\n\n".join(f"--- GTA: {f.name} ---\n{extract_text(f)}" for f in gta_files)
 
-    with st.spinner("Analisando com IA..."):
+    with st.spinner("🔍 Conferindo medicamentos e GTAs..."):
         try:
             client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
             message = client.messages.create(
@@ -138,7 +370,6 @@ if st.button("🔍 Analisar documentos", disabled=not (bs_files and gta_files), 
             raw = message.content[0].text.replace("```json", "").replace("```", "").strip()
             result = json.loads(raw)
 
-            # Verificar carências no Python (confiável)
             meds = result.get("medicamentos_encontrados", [])
             data_abate = result.get("data_abate", "")
             erros_carencia = verificar_carencias(meds, data_abate)
@@ -147,16 +378,11 @@ if st.button("🔍 Analisar documentos", disabled=not (bs_files and gta_files), 
             produtor = result.get("produtor", "")
             lote = result.get("lote", "")
 
-            # Adicionar erros de carência ao primeiro núcleo ou criar um geral
             if erros_carencia:
                 result["tem_problemas"] = True
-                erro_msgs = []
-                for ec in erros_carencia:
-                    erro_msgs.append({
-                        "categoria": "Medicamento",
-                        "item": ec["nome"],
-                        "detalhe": f"Carência não cumprida. Liberado a partir de {ec['data_limite']}, abate em {ec['data_abate']}."
-                    })
+                erro_msgs = [{"categoria": "Medicamento", "item": ec["nome"],
+                    "detalhe": f"Carência não cumprida. Liberado a partir de {ec['data_limite']}, abate em {ec['data_abate']}."}
+                    for ec in erros_carencia]
                 if nucleos:
                     nucleos[0]["erros"] = nucleos[0].get("erros", []) + erro_msgs
                 else:
@@ -165,13 +391,12 @@ if st.button("🔍 Analisar documentos", disabled=not (bs_files and gta_files), 
             st.divider()
 
             if not result.get("tem_problemas") or not any(n.get("erros") or n.get("alertas") for n in nucleos):
-                st.success(f"✅ Documento aprovado — **{produtor}** — Lote {lote} — Abate {data_abate}")
-                st.markdown(                    """
-                    <div style="text-align:center; padding: 2rem 0;">
-                        <p style="font-size:3rem; font-weight:900; color:#15803d; margin:0; line-height:1.1;">TUDO OK!</p>
-                        <p style="font-size:1.4rem; font-weight:700; color:#15803d; margin-top:0.5rem;">PODE ASSINAR A PROGRAMAÇÃO ✅</p>
-                    </div>
-                    """, unsafe_allow_html=True)
+                st.success(f"✅ {produtor} — Lote {lote} — Abate {data_abate}")
+                st.markdown("""
+                <div class="tudo-ok">
+                  <p class="tudo-ok-titulo">TUDO OK!</p>
+                  <p class="tudo-ok-sub">✅ PODE ASSINAR A PROGRAMAÇÃO ✅</p>
+                </div>""", unsafe_allow_html=True)
             else:
                 tem_erro = any(n.get("erros") for n in nucleos)
                 if tem_erro:
