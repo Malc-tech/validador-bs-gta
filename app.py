@@ -18,8 +18,6 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     margin-bottom: 1.5rem;
     text-align: center;
     border: 3px solid #FFDF00;
-    position: relative;
-    overflow: visible;
 }
 .lar-logo {
     font-family: 'Bebas Neue', cursive;
@@ -31,19 +29,17 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     margin: 0;
 }
 .lar-sub {
-    color: #ffffff;
+    color: #fff;
     font-size: 0.85rem;
     letter-spacing: 0.2em;
     margin-top: -0.3rem;
     margin-bottom: 0.5rem;
     opacity: 0.85;
 }
-
-/* Campo de frangos espalhados */
 .campo-frangos {
     position: relative;
     width: 100%;
-    height: 180px;
+    height: 190px;
     margin: 0.5rem 0;
 }
 .frango-abs {
@@ -52,47 +48,27 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     flex-direction: column;
     align-items: center;
     cursor: pointer;
-    transition: transform 0.2s;
 }
 .frango-abs:hover .frango-svg {
-    animation: acenar 0.6s ease-in-out infinite alternate;
+    animation: acenar 0.5s ease-in-out infinite alternate;
 }
-.frango-abs:hover .frango-nome {
-    opacity: 1;
-}
-.frango-nome {
-    font-size: 9px;
-    color: #FFDF00;
-    font-weight: 700;
-    text-align: center;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-    margin-top: 2px;
-    white-space: nowrap;
-}
-
 @keyframes acenar {
-    0%   { transform: rotate(-12deg) translateY(-4px); }
-    100% { transform: rotate(12deg) translateY(-4px); }
+    0%   { transform: rotate(-14deg) translateY(-5px); }
+    100% { transform: rotate(14deg) translateY(-5px); }
 }
-
 @keyframes chute {
     0%   { transform: rotate(0deg) translateY(0px); }
-    25%  { transform: rotate(-20deg) translateY(-8px); }
-    50%  { transform: rotate(25deg) translateY(-14px); }
-    75%  { transform: rotate(-10deg) translateY(-6px); }
+    20%  { transform: rotate(-25deg) translateY(-10px); }
+    45%  { transform: rotate(30deg) translateY(-18px); }
+    70%  { transform: rotate(-12deg) translateY(-8px); }
     100% { transform: rotate(0deg) translateY(0px); }
 }
 @keyframes bola-voo {
-    0%   { transform: translateX(0px) translateY(0px) rotate(0deg); opacity: 1; }
-    100% { transform: translateX(100px) translateY(-80px) rotate(720deg); opacity: 0; }
+    0%   { transform: translateX(0) translateY(0) rotate(0deg); opacity:1; }
+    100% { transform: translateX(90px) translateY(-90px) rotate(540deg); opacity:0; }
 }
-.chutando .frango-svg {
-    animation: chute 0.7s ease-in-out 3;
-}
-.chutando .bola-svg {
-    animation: bola-voo 0.7s ease-in-out forwards;
-}
+.chutando .frango-svg { animation: chute 0.9s ease-in-out 3; }
+.chutando .bola-svg  { animation: bola-voo 0.9s ease-in-out 3 forwards; }
 
 .stButton > button {
     background: linear-gradient(135deg, #009c3b, #006629) !important;
@@ -103,14 +79,11 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     border-radius: 12px !important;
     padding: 0.6rem 2rem !important;
     letter-spacing: 0.05em !important;
-    transition: all 0.2s !important;
 }
 .stButton > button:hover {
     background: linear-gradient(135deg, #FFDF00, #ffc800) !important;
     color: #003d1a !important;
-    transform: scale(1.03) !important;
 }
-
 .tudo-ok {
     background: linear-gradient(135deg, #003d1a, #006629);
     border: 3px solid #FFDF00;
@@ -127,63 +100,102 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     margin: 0;
     text-shadow: 3px 3px 0px #003d1a;
 }
-.tudo-ok-sub {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #ffffff;
-    margin-top: 0.5rem;
+.tudo-ok-sub { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.5rem; }
+
+/* CAMINHÃO DE AVES */
+.caminhao-container {
+    position: relative;
+    width: 100%;
+    padding: 1rem 0 1.5rem 0;
+    overflow: hidden;
+}
+.caminhao-svg { display: block; margin: 0 auto; }
+.erro-msg-caminhao {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 52%;
+    min-height: 80px;
+    background: rgba(220,38,38,0.13);
+    border: 2px dashed #dc2626;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #7f1d1d;
+    overflow-y: auto;
+    max-height: 110px;
+}
+.alerta-msg-caminhao {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 52%;
+    min-height: 80px;
+    background: rgba(234,179,8,0.13);
+    border: 2px dashed #ca8a04;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #713f12;
+    overflow-y: auto;
+    max-height: 110px;
 }
 </style>
 """, unsafe_allow_html=True)
 
-def frango_svg(nome_id, sexo, fa2=False, flo=False, pintinho=False):
+def frango_svg(nome_id, nome, numero, sexo, fa2=False, flo=False, pintinho=False):
     escala = 0.72 if pintinho else 1.0
-    h = int(110 * escala)
-    w = int(70 * escala)
+    h = int(115 * escala)
+    w = int(72 * escala)
     pele = "#FDE68A"
     camisa = "#009c3b"
     faixa = "#FFDF00"
     crista = "#ef4444" if sexo == "galo" else "#f97316"
-    fa_cor_esq = "#FFDF00" if fa2 else camisa
-    fa_cor_dir = "#FF6B00" if flo else ("#FFDF00" if fa2 else camisa)
+    fa_esq = "#FFDF00" if fa2 else camisa
+    fa_dir = "#FF6B00" if flo else ("#FFDF00" if fa2 else camisa)
+    nome_curto = nome[:6]
+    fs_nome = 5.5 if len(nome) <= 5 else 4.5
 
-    crista_svg = ""
     if sexo == "galo":
-        crista_svg = f'<path d="M35,18 Q38,10 42,17 Q46,8 49,17 Q44,20 35,21Z" fill="{crista}"/>'
-        barb_svg = f'<path d="M33,42 Q28,50 31,56 Q35,60 39,56 Q42,50 37,42Z" fill="{crista}"/>'
+        crista_p = f'<path d="M35,18 Q38,10 42,17 Q46,8 49,17 Q44,20 35,21Z" fill="{crista}"/>'
+        barb_p   = f'<path d="M33,42 Q28,50 31,56 Q35,60 39,56 Q42,50 37,42Z" fill="{crista}"/>'
     else:
-        crista_svg = f'<path d="M33,18 Q35,12 37,18 Q39,10 41,18 Q37,20 33,20Z" fill="{crista}"/>'
-        barb_svg = f'<path d="M34,42 Q31,47 33,51 Q35,54 37,51 Q39,47 36,42Z" fill="{crista}"/>'
+        crista_p = f'<path d="M33,18 Q35,12 37,18 Q39,10 41,18 Q37,20 33,20Z" fill="{crista}"/>'
+        barb_p   = f'<path d="M34,42 Q31,47 33,51 Q35,54 37,51 Q39,47 36,42Z" fill="{crista}"/>'
 
-    return f"""<svg class="frango-svg" id="svg-{nome_id}" width="{w}" height="{h}" viewBox="0 0 70 110" xmlns="http://www.w3.org/2000/svg">
-  <ellipse cx="35" cy="72" rx="22" ry="26" fill="{camisa}"/>
-  <ellipse cx="35" cy="60" rx="20" ry="5" fill="{faixa}"/>
-  {crista_svg}
-  <rect x="29" y="42" width="12" height="10" fill="{pele}" rx="3"/>
-  <ellipse cx="35" cy="34" rx="18" ry="17" fill="{pele}"/>
-  <path d="M35,36 L42,39 L35,42Z" fill="#f97316"/>
-  <path d="M35,36 L28,39 L35,42Z" fill="#fb923c"/>
-  <ellipse cx="27" cy="30" rx="5" ry="5.5" fill="white"/>
-  <ellipse cx="28" cy="30" rx="3" ry="3.5" fill="#1e293b"/>
-  <ellipse cx="29" cy="28" rx="1.2" ry="1.2" fill="white"/>
-  <ellipse cx="43" cy="30" rx="5" ry="5.5" fill="white"/>
-  <ellipse cx="44" cy="30" rx="3" ry="3.5" fill="#1e293b"/>
-  <ellipse cx="45" cy="28" rx="1.2" ry="1.2" fill="white"/>
-  <ellipse cx="20" cy="36" rx="4" ry="3" fill="#fca5a5" opacity="0.6"/>
-  <ellipse cx="50" cy="36" rx="4" ry="3" fill="#fca5a5" opacity="0.6"/>
-  {barb_svg}
-  <path d="M13,62 Q5,55 4,46 Q6,40 11,44 Q14,52 18,60Z" fill="{pele}"/>
-  <path d="M10,52 Q7,50 6,46 Q8,44 10,47 Q11,50 12,53Z" fill="{fa_cor_esq}"/>
-  <path d="M57,62 Q65,55 66,46 Q64,40 59,44 Q56,52 52,60Z" fill="{pele}"/>
-  <path d="M60,52 Q63,50 64,46 Q62,44 60,47 Q59,50 58,53Z" fill="{fa_cor_dir}"/>
-  <path d="M28,95 Q24,105 22,108" fill="none" stroke="#d97706" stroke-width="5" stroke-linecap="round"/>
-  <path d="M42,95 Q50,103 54,107" fill="none" stroke="#d97706" stroke-width="5" stroke-linecap="round"/>
-  <ellipse cx="21" cy="108" rx="7" ry="3.5" fill="#1e293b" transform="rotate(-10,21,108)"/>
-  <ellipse cx="54" cy="107" rx="7" ry="3.5" fill="#1e293b" transform="rotate(25,54,107)"/>
+    return f"""<svg class="frango-svg" width="{w}" height="{h}" viewBox="0 0 72 115" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="36" cy="74" rx="22" ry="26" fill="{camisa}"/>
+  <ellipse cx="36" cy="62" rx="20" ry="5" fill="{faixa}"/>
+  <text x="36" y="73" text-anchor="middle" font-family="Arial" font-size="{fs_nome}" font-weight="700" fill="{faixa}">{nome_curto}</text>
+  <text x="36" y="82" text-anchor="middle" font-family="Arial Black" font-size="8" font-weight="900" fill="{faixa}">#{numero}</text>
+  {crista_p}
+  <rect x="30" y="43" width="12" height="10" fill="{pele}" rx="3"/>
+  <ellipse cx="36" cy="34" rx="18" ry="17" fill="{pele}"/>
+  <path d="M36,36 L43,39 L36,42Z" fill="#f97316"/>
+  <path d="M36,36 L29,39 L36,42Z" fill="#fb923c"/>
+  <ellipse cx="28" cy="30" rx="5" ry="5.5" fill="white"/>
+  <ellipse cx="29" cy="30" rx="3" ry="3.5" fill="#1e293b"/>
+  <ellipse cx="30" cy="28" rx="1.2" ry="1.2" fill="white"/>
+  <ellipse cx="44" cy="30" rx="5" ry="5.5" fill="white"/>
+  <ellipse cx="45" cy="30" rx="3" ry="3.5" fill="#1e293b"/>
+  <ellipse cx="46" cy="28" rx="1.2" ry="1.2" fill="white"/>
+  <ellipse cx="21" cy="37" rx="4" ry="3" fill="#fca5a5" opacity="0.6"/>
+  <ellipse cx="51" cy="37" rx="4" ry="3" fill="#fca5a5" opacity="0.6"/>
+  {barb_p}
+  <path d="M14,63 Q6,56 5,47 Q7,41 12,45 Q15,53 19,61Z" fill="{pele}"/>
+  <path d="M11,53 Q8,51 7,47 Q9,45 11,48 Q12,51 13,54Z" fill="{fa_esq}"/>
+  <path d="M58,63 Q66,56 67,47 Q65,41 60,45 Q57,53 53,61Z" fill="{pele}"/>
+  <path d="M61,53 Q64,51 65,47 Q63,45 61,48 Q60,51 59,54Z" fill="{fa_dir}"/>
+  <path d="M29,97 Q25,107 23,110" fill="none" stroke="#d97706" stroke-width="5" stroke-linecap="round"/>
+  <path d="M43,97 Q51,105 55,109" fill="none" stroke="#d97706" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="22" cy="110" rx="7" ry="3.5" fill="#1e293b" transform="rotate(-10,22,110)"/>
+  <ellipse cx="55" cy="109" rx="7" ry="3.5" fill="#1e293b" transform="rotate(25,55,109)"/>
 </svg>"""
 
 def bola_svg(small=False):
-    s = 18 if small else 22
+    s = 16 if small else 20
     return f"""<svg class="bola-svg" width="{s}" height="{s}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
   <circle cx="12" cy="12" r="11" fill="white" stroke="#9ca3af" stroke-width="1"/>
   <polygon points="12,4 16,8 14,13 10,13 8,8" fill="#1e293b"/>
@@ -191,26 +203,61 @@ def bola_svg(small=False):
   <polygon points="8,8 3,9 3,15 7,17 10,13" fill="none" stroke="#9ca3af" stroke-width="0.8"/>
 </svg>"""
 
-# Colaboradores com posições espalhadas pelo campo (left%, bottom px)
+def caminhao_svg():
+    return """<svg class="caminhao-svg" width="700" height="160" viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg">
+  <!-- Carroceria (gaiola) -->
+  <rect x="120" y="20" width="420" height="110" fill="#b45309" rx="4"/>
+  <rect x="122" y="22" width="416" height="106" fill="#fef3c7" rx="3"/>
+  <!-- Grades da gaiola -->
+  <line x1="160" y1="22" x2="160" y2="128" stroke="#b45309" stroke-width="3"/>
+  <line x1="200" y1="22" x2="200" y2="128" stroke="#b45309" stroke-width="3"/>
+  <line x1="240" y1="22" x2="240" y2="128" stroke="#b45309" stroke-width="3"/>
+  <line x1="280" y1="22" x2="280" y2="128" stroke="#b45309" stroke-width="3"/>
+  <line x1="320" y1="22" x2="320" y2="128" stroke="#b45309" stroke-width="3"/>
+  <line x1="360" y1="22" x2="360" y2="128" stroke="#b45309" stroke-width="3"/>
+  <line x1="400" y1="22" x2="400" y2="128" stroke="#b45309" stroke-width="3"/>
+  <line x1="440" y1="22" x2="440" y2="128" stroke="#b45309" stroke-width="3"/>
+  <line x1="480" y1="22" x2="480" y2="128" stroke="#b45309" stroke-width="3"/>
+  <line x1="122" y1="75" x2="538" y2="75" stroke="#b45309" stroke-width="3"/>
+  <!-- Cabine -->
+  <rect x="28" y="45" width="100" height="85" fill="#dc2626" rx="8"/>
+  <rect x="35" y="52" width="55" height="40" fill="#93c5fd" rx="4" opacity="0.8"/>
+  <rect x="55" y="48" width="68" height="8" fill="#b91c1c" rx="2"/>
+  <!-- Para-choque -->
+  <rect x="18" y="118" width="115" height="8" fill="#6b7280" rx="3"/>
+  <!-- Eixos -->
+  <rect x="0" y="126" width="700" height="6" fill="#d97706"/>
+  <!-- Pneus cabine -->
+  <circle cx="68" cy="142" r="16" fill="#1e293b"/>
+  <circle cx="68" cy="142" r="8" fill="#6b7280"/>
+  <!-- Pneus traseiros -->
+  <circle cx="480" cy="142" r="16" fill="#1e293b"/>
+  <circle cx="480" cy="142" r="8" fill="#6b7280"/>
+  <circle cx="520" cy="142" r="16" fill="#1e293b"/>
+  <circle cx="520" cy="142" r="8" fill="#6b7280"/>
+  <!-- Farol -->
+  <ellipse cx="22" cy="80" rx="8" ry="6" fill="#fef08a"/>
+  <!-- Texto LAR no caminhão -->
+  <text x="175" y="16" font-family="Arial Black" font-size="11" font-weight="900" fill="#b45309" text-anchor="middle">⚠ DOCUMENTO COM PROBLEMAS ⚠</text>
+</svg>"""
+
 colaboradores = [
-    {"nome": "Hagatah",  "id": "hagatah",  "numero": "7",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False, "left": 3,  "bottom": 20},
-    {"nome": "Sarah",    "id": "sarah",    "numero": "9",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False, "left": 14, "bottom": 35},
-    {"nome": "Sara",     "id": "sara",     "numero": "11", "sexo": "galinha", "fa2": True,  "flo": False, "pintinho": False, "left": 25, "bottom": 15},
-    {"nome": "Michael",  "id": "michael",  "numero": "10", "sexo": "galo",    "fa2": True,  "flo": False, "pintinho": False, "left": 37, "bottom": 30},
-    {"nome": "Edmar",    "id": "edmar",    "numero": "5",  "sexo": "galo",    "fa2": False, "flo": True,  "pintinho": False, "left": 50, "bottom": 18},
-    {"nome": "Maria",    "id": "maria_j",  "numero": "8",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": True,  "left": 61, "bottom": 38},
-    {"nome": "Maria",    "id": "maria",    "numero": "3",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False, "left": 70, "bottom": 20},
-    {"nome": "Beatriz",  "id": "beatriz",  "numero": "6",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False, "left": 81, "bottom": 35},
-    {"nome": "Vinicius", "id": "vinicius", "numero": "4",  "sexo": "galo",    "fa2": False, "flo": False, "pintinho": True,  "left": 91, "bottom": 18},
+    {"nome": "Hagatah", "id": "hagatah", "numero": "7",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False, "left": 2,  "bottom": 25},
+    {"nome": "Sarah",   "id": "sarah",   "numero": "9",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False, "left": 13, "bottom": 40},
+    {"nome": "Sara",    "id": "sara",    "numero": "11", "sexo": "galinha", "fa2": True,  "flo": False, "pintinho": False, "left": 24, "bottom": 20},
+    {"nome": "Michael", "id": "michael", "numero": "10", "sexo": "galo",    "fa2": True,  "flo": False, "pintinho": False, "left": 36, "bottom": 35},
+    {"nome": "Edmar",   "id": "edmar",   "numero": "5",  "sexo": "galo",    "fa2": False, "flo": True,  "pintinho": False, "left": 48, "bottom": 20},
+    {"nome": "Maria",   "id": "maria_j", "numero": "8",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": True,  "left": 59, "bottom": 42},
+    {"nome": "Maria",   "id": "maria",   "numero": "3",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False, "left": 68, "bottom": 22},
+    {"nome": "Beatriz", "id": "beatriz", "numero": "6",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False, "left": 79, "bottom": 38},
+    {"nome": "Vinicius","id": "vinicius","numero": "4",  "sexo": "galo",    "fa2": False, "flo": False, "pintinho": True,  "left": 90, "bottom": 22},
 ]
 
 campo_html = '<div class="campo-frangos" id="campo-frangos">'
 for c in colaboradores:
-    w = 50 if c["pintinho"] else 70
     campo_html += f"""<div class="frango-abs" id="wrap-{c['id']}" style="left:{c['left']}%;bottom:{c['bottom']}px;">
-    {frango_svg(c['id'], c['sexo'], c['fa2'], c['flo'], c['pintinho'])}
+    {frango_svg(c['id'], c['nome'], c['numero'], c['sexo'], c['fa2'], c['flo'], c['pintinho'])}
     {bola_svg(c['pintinho'])}
-    <div class="frango-nome">{c['nome']}<br>#{c['numero']}</div>
 </div>"""
 campo_html += '</div>'
 
@@ -220,37 +267,9 @@ st.markdown(f"""
   <p class="lar-sub">COOPERATIVA AGROINDUSTRIAL &nbsp;·&nbsp; VALIDADOR BS e GTA &nbsp;·&nbsp; SIF 797</p>
   {campo_html}
 </div>
-
-<script>
-(function() {{
-    function animarTodos() {{
-        var wraps = document.querySelectorAll('.frango-abs');
-        wraps.forEach(function(w) {{
-            w.classList.add('chutando');
-        }});
-        setTimeout(function() {{
-            wraps.forEach(function(w) {{ w.classList.remove('chutando'); }});
-        }}, 2200);
-    }}
-
-    function ligarBotao() {{
-        var btns = window.parent.document.querySelectorAll('.stButton button');
-        btns.forEach(function(btn) {{
-            if (btn.textContent.includes('Analisar')) {{
-                btn.removeEventListener('click', animarTodos);
-                btn.addEventListener('click', animarTodos);
-            }}
-        }});
-    }}
-
-    // Tenta ligar imediatamente e de novo após 2s
-    ligarBotao();
-    setTimeout(ligarBotao, 2000);
-}})();
-</script>
+<div id="trigger-anim" style="display:none">0</div>
 """, unsafe_allow_html=True)
 
-# Carências
 CARENCIAS = {
     "aviax plus": 11, "maxiban": 9, "monimax": 10, "nicarmix 25": 11,
     "monteban g100": 9, "linco-spectin 440": 1, "spectomix": 5,
@@ -294,12 +313,8 @@ def verificar_carencias(medicamentos_bs, data_abate_str):
             continue
         data_limite = data_fim + timedelta(days=dias)
         if data_abate < data_limite:
-            erros.append({
-                "nome": med.get("nome"),
-                "data_fim": data_fim_str,
-                "data_limite": data_limite.strftime("%d/%m/%Y"),
-                "data_abate": data_abate_str
-            })
+            erros.append({"nome": med.get("nome"), "data_fim": data_fim_str,
+                "data_limite": data_limite.strftime("%d/%m/%Y"), "data_abate": data_abate_str})
     return erros
 
 SYSTEM_PROMPT = """Você é especialista em documentos veterinários de frigoríficos de frango da LAR Cooperativa Agroindustrial.
@@ -310,33 +325,28 @@ VALIDAÇÕES:
    - Compare aves programadas no BS com TOTAL na GTA. Se diferente: ERRO.
    - Compare aviário/núcleo do BS com o da GTA. Se diferente: ERRO.
    - Compare SIF destino. Se diferente: ERRO.
-   - Se GTA listada no BS não foi fornecida nos arquivos enviados: SEMPRE retornar ALERTA informando o número da GTA faltante. Isso é obrigatório independente de qualquer outra validação.
+   - Se GTA listada no BS não foi fornecida: SEMPRE retornar ALERTA com número da GTA faltante.
 
 2. MORTALIDADE:
-   Fórmula: (total_pintos_alojados - remanescentes_1o_carregamento - programadas_1o_carregamento) / total_pintos_alojados * 100
-   - Se mortalidade calculada > 5% E a mensagem "MORTALIDADE ACIMA DE 5%" NÃO constar no BS: ERRO simples sem mostrar cálculos.
-   - Se mortalidade calculada <= 5% E a mensagem "MORTALIDADE ACIMA DE 5%" CONSTAR no BS: ALERTA simples sem mostrar cálculos.
-   - Se o valor calculado divergir do declarado (considerando arredondamentos): ALERTA simples sem mostrar cálculos.
-   - Se tudo correto: não retornar nada sobre mortalidade.
+   Fórmula: (total_pintos - remanescentes_1o - programadas_1o) / total_pintos * 100
+   - Se > 5% E sem mensagem "MORTALIDADE ACIMA DE 5%" no BS: ERRO simples.
+   - Se <= 5% E com mensagem "MORTALIDADE ACIMA DE 5%": ALERTA simples.
+   - Se valor divergir do declarado (arredondamentos): ALERTA simples.
 
-3. MEDICAMENTOS:
-   - Se medicamento não estiver na lista oficial: ALERTA.
-   - NÃO calcule carência — isso já foi calculado pelo sistema.
+3. MEDICAMENTOS: se não estiver na lista oficial: ALERTA. NÃO calcule carência.
 
 4. CAMPOS OBRIGATÓRIOS ausentes: ERRO.
-   Campos: nome estabelecimento, georreferenciamento, município/UF, cadastro SVO, lote/núcleo, nº galpões, médico veterinário CRMV, data alojamento, GTA pintos, nº pintos alojados, data carregamento, resultado salmonela.
 
-5. EXTRAÇÃO: inclua todos os medicamentos encontrados no BS com nome e data_fim.
+5. EXTRAÇÃO: inclua todos os medicamentos com nome e data_fim.
 
-ORGANIZAÇÃO: agrupe por núcleo informando os aviários relacionados.
+ORGANIZAÇÃO: agrupe por núcleo com aviários.
 
 Retorne SOMENTE JSON sem markdown:
 {"produtor":"","lote":"","data_abate":"","tem_problemas":false,"medicamentos_encontrados":[{"nome":"","data_fim":"dd/mm/aaaa ou null"}],"nucleos":[{"nucleo":"","aviarios":"","erros":[{"categoria":"GTA|Mortalidade|Campo","item":"","detalhe":""}],"alertas":[{"categoria":"GTA|Mortalidade|Medicamento|Campo","item":"","detalhe":""}]}]}"""
 
-def extract_text(uploaded_file):
-    data = uploaded_file.read()
-    doc = fitz.open(stream=data, filetype="pdf")
-    return "\n".join(page.get_text() for page in doc)
+def extract_text(f):
+    doc = fitz.open(stream=f.read(), filetype="pdf")
+    return "\n".join(p.get_text() for p in doc)
 
 col1, col2 = st.columns(2)
 with col1:
@@ -344,7 +354,22 @@ with col1:
 with col2:
     gta_files = st.file_uploader("📋 GTAs", type="pdf", accept_multiple_files=True)
 
-if st.button("⚽ Analisar documentos", disabled=not (bs_files and gta_files), use_container_width=True, type="primary"):
+analisar = st.button("⚽ Analisar documentos", disabled=not (bs_files and gta_files), use_container_width=True, type="primary")
+
+# Animação via JS — dispara quando o botão é clicado (estado muda)
+if analisar:
+    st.markdown("""
+    <script>
+    (function() {
+        var wraps = document.querySelectorAll('.frango-abs');
+        wraps.forEach(function(w) { w.classList.add('chutando'); });
+        setTimeout(function() {
+            wraps.forEach(function(w) { w.classList.remove('chutando'); });
+        }, 2800);
+    })();
+    </script>
+    """, unsafe_allow_html=True)
+
     with st.spinner("🐔 Os frangos estão analisando..."):
         bs_text = "\n\n".join(f"--- BS: {f.name} ---\n{extract_text(f)}" for f in bs_files)
         gta_text = "\n\n".join(f"--- GTA: {f.name} ---\n{extract_text(f)}" for f in gta_files)
@@ -353,35 +378,34 @@ if st.button("⚽ Analisar documentos", disabled=not (bs_files and gta_files), u
         try:
             client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
             message = client.messages.create(
-                model="claude-sonnet-4-5",
-                max_tokens=4000,
+                model="claude-sonnet-4-5", max_tokens=4000,
                 system=SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": f"Analise:\n{bs_text}\n{gta_text}"}]
             )
-            raw = message.content[0].text.replace("```json", "").replace("```", "").strip()
+            raw = message.content[0].text.replace("```json","").replace("```","").strip()
             result = json.loads(raw)
 
             meds = result.get("medicamentos_encontrados", [])
             data_abate = result.get("data_abate", "")
             erros_carencia = verificar_carencias(meds, data_abate)
-
             nucleos = result.get("nucleos", [])
             produtor = result.get("produtor", "")
             lote = result.get("lote", "")
 
             if erros_carencia:
                 result["tem_problemas"] = True
-                erro_msgs = [{"categoria": "Medicamento", "item": ec["nome"],
+                msgs = [{"categoria": "Medicamento", "item": ec["nome"],
                     "detalhe": f"Carência não cumprida. Liberado a partir de {ec['data_limite']}, abate em {ec['data_abate']}."}
                     for ec in erros_carencia]
                 if nucleos:
-                    nucleos[0]["erros"] = nucleos[0].get("erros", []) + erro_msgs
+                    nucleos[0]["erros"] = nucleos[0].get("erros", []) + msgs
                 else:
-                    nucleos.append({"nucleo": "Geral", "aviarios": "-", "erros": erro_msgs, "alertas": []})
+                    nucleos.append({"nucleo": "Geral", "aviarios": "-", "erros": msgs, "alertas": []})
 
             st.divider()
+            tem_problemas = result.get("tem_problemas") and any(n.get("erros") or n.get("alertas") for n in nucleos)
 
-            if not result.get("tem_problemas") or not any(n.get("erros") or n.get("alertas") for n in nucleos):
+            if not tem_problemas:
                 st.success(f"✅ {produtor} — Lote {lote} — Abate {data_abate}")
                 st.markdown("""
                 <div class="tudo-ok">
@@ -390,10 +414,9 @@ if st.button("⚽ Analisar documentos", disabled=not (bs_files and gta_files), u
                 </div>""", unsafe_allow_html=True)
             else:
                 tem_erro = any(n.get("erros") for n in nucleos)
-                if tem_erro:
-                    st.error(f"**{produtor}** — Lote {lote} — Abate {data_abate}")
-                else:
-                    st.warning(f"**{produtor}** — Lote {lote} — Abate {data_abate}")
+
+                # Cabeçalho produtor
+                st.markdown(f"**{produtor}** — Lote {lote} — Abate {data_abate}")
 
                 for nucleo in nucleos:
                     erros = nucleo.get("erros", [])
@@ -402,17 +425,33 @@ if st.button("⚽ Analisar documentos", disabled=not (bs_files and gta_files), u
                         continue
                     n_num = nucleo.get("nucleo", "")
                     aviarios = nucleo.get("aviarios", "")
-                    with st.expander(f"🏠 Núcleo {n_num} — Aviários: {aviarios}", expanded=True):
-                        if erros:
-                            for cat in set(e["categoria"] for e in erros):
-                                st.markdown(f"**❌ {cat}**")
-                                for e in [x for x in erros if x["categoria"] == cat]:
-                                    st.markdown(f"- **{e['item']}**: {e['detalhe']}")
-                        if alertas:
-                            for cat in set(a["categoria"] for a in alertas):
-                                st.markdown(f"**⚠️ {cat}**")
-                                for a in [x for x in alertas if x["categoria"] == cat]:
-                                    st.markdown(f"- **{a['item']}**: {a['detalhe']}")
+
+                    # Montar conteúdo HTML da caçamba
+                    conteudo_html = ""
+                    if erros:
+                        for cat in set(e["categoria"] for e in erros):
+                            conteudo_html += f"<b>❌ {cat}</b><br>"
+                            for e in [x for x in erros if x["categoria"] == cat]:
+                                conteudo_html += f"• <b>{e['item']}</b>: {e['detalhe']}<br>"
+                    if alertas:
+                        for cat in set(a["categoria"] for a in alertas):
+                            conteudo_html += f"<b>⚠️ {cat}</b><br>"
+                            for a in [x for x in alertas if x["categoria"] == cat]:
+                                conteudo_html += f"• <b>{a['item']}</b>: {a['detalhe']}<br>"
+
+                    css_class = "erro-msg-caminhao" if erros else "alerta-msg-caminhao"
+
+                    st.markdown(f"""
+                    <div style="margin-bottom:1.5rem;">
+                      <div style="font-weight:700; margin-bottom:6px; color:#1e293b;">
+                        🏠 Núcleo {n_num} — Aviários: {aviarios}
+                      </div>
+                      <div class="caminhao-container">
+                        {caminhao_svg()}
+                        <div class="{css_class}">{conteudo_html}</div>
+                      </div>
+                    </div>
+                    """, unsafe_allow_html=True)
 
         except json.JSONDecodeError:
             st.error("Erro ao interpretar resposta da IA. Tente novamente.")
