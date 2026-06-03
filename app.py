@@ -31,12 +31,16 @@ MEDICAMENTOS VIA ORAL:
 - Farmaflor, Neobase, Acquaneutra, Activo Liquido, Biohidract, Bronk Clean, Ceitz E.F. Plus, Neoflora, Oligoacid, Perform-Max, Polimeve, Mentovest: 0 dias
 NEBULIZAÇÃO (todos 0 dias): AVT 450, AVT-40, Farmasept Plus, Farmasept 40, Germon Plus, Timsen, Virkon, VirukIII
 
-REGRA DE CARÊNCIA:
-- Medicamentos com 0 dias: data_fim pode ser igual à data do abate — OK, nunca retornar erro.
-- Medicamentos com N dias: some N+1 dias à data_fim. Se data_abate >= resultado: OK, não retornar nada. Se data_abate < resultado: ERRO (abate antes da carência ser cumprida).
-- Exemplo: Maxiban 8 dias, data_fim 10/05, abate 18/05 → 10/05 + 9 dias = 19/05, abate 18/05 < 19/05 → ERRO (abate antes da carência).
-- Exemplo: Maxiban 8 dias, data_fim 10/05, abate 19/05 → 10/05 + 9 dias = 19/05, abate 19/05 >= 19/05 → OK, não retornar.
-- NUNCA retornar medicamentos que estão dentro da carência.
+REGRA DE CARÊNCIA — LEIA COM ATENÇÃO:
+- Medicamentos com 0 dias: sempre OK, nunca retornar erro.
+- Medicamentos com N dias: calcule DATA_LIMITE = data_fim + (N + 1) dias.
+  Se data_abate >= DATA_LIMITE: APROVADO, não retornar nada.
+  Se data_abate < DATA_LIMITE: ERRO.
+- ATENÇÃO: compare as datas corretamente considerando mês e ano. Uma data em junho é SEMPRE posterior a uma data em maio do mesmo ano.
+- Exemplos corretos:
+  Maxiban 8 dias, data_fim 14/05/2026, abate 01/06/2026 → DATA_LIMITE = 14/05 + 9 = 23/05/2026. Abate 01/06/2026 > 23/05/2026 → APROVADO, não retornar.
+  Maxiban 8 dias, data_fim 14/05/2026, abate 20/05/2026 → DATA_LIMITE = 23/05/2026. Abate 20/05/2026 < 23/05/2026 → ERRO.
+- NUNCA retornar medicamentos aprovados.
 """
 
 SYSTEM_PROMPT = """Você é especialista em documentos veterinários de frigoríficos de frango da LAR Cooperativa Agroindustrial.
