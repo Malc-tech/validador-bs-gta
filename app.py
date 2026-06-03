@@ -249,21 +249,26 @@ VALIDAÇÕES:
    - Compare aves programadas no BS com TOTAL na GTA. Se diferente: ERRO.
    - Compare aviário/núcleo do BS com o da GTA. Se diferente: ERRO.
    - Compare SIF destino. Se diferente: ERRO.
-   - Se GTA listada no BS não foi fornecida: SEMPRE retornar ALERTA com número da GTA faltante.
+   - Se GTA listada no BS não foi fornecida MAS o destino é SIF 797: SEMPRE retornar ALERTA com número da GTA faltante.
+   - Se o destino do carregamento NÃO for SIF 797: ignorar completamente essa linha, não verificar e não alertar sobre GTA faltante.
 
-2. MORTALIDADE:
+2. RASTREABILIDADE — GTA DOS PINTOS:
+   - NÃO verificar se as GTAs dos pintos foram enviadas para análise (elas nunca serão enviadas).
+   - Verificar apenas se a quantidade de linhas de GTA de pintos alojados é igual ao número de galpões do núcleo declarado no BS. Se diferente: ALERTA.
+
+3. MORTALIDADE:
    Fórmula: (total_pintos - remanescentes_1o - programadas_1o) / total_pintos * 100
    - Se > 5% E sem mensagem "MORTALIDADE ACIMA DE 5%" no BS: ERRO simples.
    - Se <= 5% E com a frase "MORTALIDADE ACIMA DE 5%" em qualquer parte do BS (incluindo declarações ou observações): apenas ALERTA simples. NÃO gerar ERRO nesse caso.
    - ATENÇÃO: a frase "MORTALIDADE ACIMA DE 5% NÃO SENDO EM 72 HORAS" também conta como presença da mensagem — não gerar erro.
    - Se valor divergir do declarado (arredondamentos): ALERTA simples.
 
-3. MEDICAMENTOS: se não estiver na lista oficial: ALERTA. NÃO calcule carência.
+4. MEDICAMENTOS: se não estiver na lista oficial: ALERTA. NÃO calcule carência.
 
-4. CAMPOS OBRIGATÓRIOS ausentes: ERRO.
+5. CAMPOS OBRIGATÓRIOS ausentes: ERRO.
    Campos: nome estabelecimento, georreferenciamento, município/UF, cadastro SVO, lote/núcleo, nº galpões, médico veterinário CRMV, data alojamento, GTA pintos, nº pintos alojados, data carregamento, resultado salmonela.
 
-5. EXTRAÇÃO: inclua todos os medicamentos com nome e data_fim.
+6. EXTRAÇÃO: inclua todos os medicamentos com nome e data_fim.
 
 ORGANIZAÇÃO: agrupe por núcleo com aviários.
 
