@@ -4,7 +4,7 @@ import fitz
 import json
 from datetime import datetime, timedelta
 
-st.set_page_config(page_title="Validador BS e GTA — LAR", page_icon="🐔", layout="wide")
+st.set_page_config(page_title="Validador LAR", page_icon="🐔", layout="wide")
 
 st.markdown("""
 <style>
@@ -185,63 +185,73 @@ campo_html += '</div>'
 st.markdown(f"""
 <div class="lar-header">
   <p class="lar-logo">LAR</p>
-  <p class="lar-sub">COOPERATIVA AGROINDUSTRIAL &nbsp;·&nbsp; VALIDADOR BS e GTA &nbsp;·&nbsp; SIF 797</p>
+  <p class="lar-sub">COOPERATIVA AGROINDUSTRIAL &nbsp;·&nbsp; VALIDADOR DE DOCUMENTOS &nbsp;·&nbsp; SIF 797</p>
   {campo_html}
 </div>
 """, unsafe_allow_html=True)
 
-CARENCIAS = {
-    "aviax plus": 11, "maxiban": 9, "monimax": 10, "nicarmix 25": 11,
-    "monteban g100": 9, "linco-spectin 440": 1, "spectomix": 5,
-    "coxifarm m40": 1, "avatec 20": 6, "zoocox": 1, "salinacox 240": 1,
-    "coxifarm s": 1, "coxifarm plus": 1, "diatrim": 6, "linco-spectin": 3,
-    "lincofarm ti": 3, "trimelor 75": 5, "farmaflor": 1, "neobase": 1,
-    "acquaneutra": 1, "activo liquido": 1, "biohidract": 1, "bronk clean": 1,
-    "ceitz e.f. plus": 1, "neoflora": 1, "oligoacid": 1, "perform-max": 1,
-    "polimeve": 1, "mentovest": 1, "avt 450": 1, "avt-40": 1,
-    "farmasept plus": 1, "farmasept 40": 1, "germon plus": 1,
-    "timsen": 1, "virkon": 1, "virukiii": 1,
-}
+# ============================================================
+# ABAS
+# ============================================================
+aba1, aba2 = st.tabs(["📋 Conferência BS e GTA", "🚛 Conferência Ordens de Carregamento"])
 
-def parse_date(s):
-    for fmt in ("%d/%m/%Y", "%d/%m/%y"):
-        try:
-            return datetime.strptime(s.strip(), fmt)
-        except:
-            pass
-    return None
+# ============================================================
+# ABA 1 — BS e GTA
+# ============================================================
+with aba1:
 
-def verificar_carencias(medicamentos_bs, data_abate_str):
-    data_abate = parse_date(data_abate_str)
-    if not data_abate:
-        return []
-    erros = []
-    for med in medicamentos_bs:
-        nome = med.get("nome", "").lower().strip()
-        data_fim_str = med.get("data_fim", "")
-        if not data_fim_str:
-            continue
-        data_fim = parse_date(data_fim_str)
-        if not data_fim:
-            continue
-        dias = None
-        for key, val in CARENCIAS.items():
-            if key in nome or nome in key:
-                dias = val
-                break
-        if dias is None or dias <= 1:
-            continue
-        data_limite = data_fim + timedelta(days=dias)
-        if data_abate < data_limite:
-            erros.append({
-                "nome": med.get("nome"),
-                "data_fim": data_fim_str,
-                "data_limite": data_limite.strftime("%d/%m/%Y"),
-                "data_abate": data_abate_str
-            })
-    return erros
+    CARENCIAS = {
+        "aviax plus": 11, "maxiban": 9, "monimax": 10, "nicarmix 25": 11,
+        "monteban g100": 9, "linco-spectin 440": 1, "spectomix": 5,
+        "coxifarm m40": 1, "avatec 20": 6, "zoocox": 1, "salinacox 240": 1,
+        "coxifarm s": 1, "coxifarm plus": 1, "diatrim": 6, "linco-spectin": 3,
+        "lincofarm ti": 3, "trimelor 75": 5, "farmaflor": 1, "neobase": 1,
+        "acquaneutra": 1, "activo liquido": 1, "biohidract": 1, "bronk clean": 1,
+        "ceitz e.f. plus": 1, "neoflora": 1, "oligoacid": 1, "perform-max": 1,
+        "polimeve": 1, "mentovest": 1, "avt 450": 1, "avt-40": 1,
+        "farmasept plus": 1, "farmasept 40": 1, "germon plus": 1,
+        "timsen": 1, "virkon": 1, "virukiii": 1,
+    }
 
-SYSTEM_PROMPT = """Você é especialista em documentos veterinários de frigoríficos de frango da LAR Cooperativa Agroindustrial.
+    def parse_date(s):
+        for fmt in ("%d/%m/%Y", "%d/%m/%y"):
+            try:
+                return datetime.strptime(s.strip(), fmt)
+            except:
+                pass
+        return None
+
+    def verificar_carencias(medicamentos_bs, data_abate_str):
+        data_abate = parse_date(data_abate_str)
+        if not data_abate:
+            return []
+        erros = []
+        for med in medicamentos_bs:
+            nome = med.get("nome", "").lower().strip()
+            data_fim_str = med.get("data_fim", "")
+            if not data_fim_str:
+                continue
+            data_fim = parse_date(data_fim_str)
+            if not data_fim:
+                continue
+            dias = None
+            for key, val in CARENCIAS.items():
+                if key in nome or nome in key:
+                    dias = val
+                    break
+            if dias is None or dias <= 1:
+                continue
+            data_limite = data_fim + timedelta(days=dias)
+            if data_abate < data_limite:
+                erros.append({
+                    "nome": med.get("nome"),
+                    "data_fim": data_fim_str,
+                    "data_limite": data_limite.strftime("%d/%m/%Y"),
+                    "data_abate": data_abate_str
+                })
+        return erros
+
+    SYSTEM_PROMPT_BS = """Você é especialista em documentos veterinários de frigoríficos de frango da LAR Cooperativa Agroindustrial.
 Analise o BS e as GTAs. Retorne APENAS problemas encontrados. Itens corretos NÃO aparecem.
 
 VALIDAÇÕES:
@@ -250,17 +260,16 @@ VALIDAÇÕES:
    - Compare aviário/núcleo do BS com o da GTA. Se diferente: ERRO.
    - Compare SIF destino. Se diferente: ERRO.
    - Se GTA listada no BS não foi fornecida MAS o destino é SIF 797: SEMPRE retornar ALERTA com número da GTA faltante.
-   - Se o destino do carregamento NÃO for SIF 797: ignorar completamente essa linha, não verificar e não alertar sobre GTA faltante.
+   - Se o destino do carregamento NÃO for SIF 797: ignorar completamente essa linha.
 
 2. RASTREABILIDADE — GTA DOS PINTOS:
-   - NÃO verificar se as GTAs dos pintos foram enviadas para análise (elas nunca serão enviadas).
-   - Verificar apenas se a quantidade de linhas de GTA de pintos alojados é igual ao número de galpões do núcleo declarado no BS. Se diferente: ALERTA.
+   - NÃO verificar se as GTAs dos pintos foram enviadas.
+   - Verificar apenas se a quantidade de linhas de GTA de pintos alojados é igual ao número de galpões declarado no BS. Se diferente: ALERTA.
 
 3. MORTALIDADE:
    Fórmula: (total_pintos - remanescentes_1o - programadas_1o) / total_pintos * 100
-   - Se > 5% E sem mensagem "MORTALIDADE ACIMA DE 5%" no BS: ERRO simples.
-   - Se <= 5% E com a frase "MORTALIDADE ACIMA DE 5%" em qualquer parte do BS (incluindo declarações ou observações): apenas ALERTA simples. NÃO gerar ERRO nesse caso.
-   - ATENÇÃO: a frase "MORTALIDADE ACIMA DE 5% NÃO SENDO EM 72 HORAS" também conta como presença da mensagem — não gerar erro.
+   - Se > 5% E sem a frase "MORTALIDADE ACIMA DE 5%" (incluindo "MORTALIDADE ACIMA DE 5% NÃO SENDO EM 72 HORAS") no BS: ERRO simples.
+   - Se <= 5% E com essa frase: ALERTA simples.
    - Se valor divergir do declarado (arredondamentos): ALERTA simples.
 
 4. MEDICAMENTOS: se não estiver na lista oficial: ALERTA. NÃO calcule carência.
@@ -275,89 +284,268 @@ ORGANIZAÇÃO: agrupe por núcleo com aviários.
 Retorne SOMENTE JSON sem markdown:
 {"produtor":"","lote":"","data_abate":"","tem_problemas":false,"medicamentos_encontrados":[{"nome":"","data_fim":"dd/mm/aaaa ou null"}],"nucleos":[{"nucleo":"","aviarios":"","erros":[{"categoria":"GTA|Mortalidade|Campo","item":"","detalhe":""}],"alertas":[{"categoria":"GTA|Mortalidade|Medicamento|Campo","item":"","detalhe":""}]}]}"""
 
-def extract_text(f):
-    doc = fitz.open(stream=f.read(), filetype="pdf")
-    return "\n".join(p.get_text() for p in doc)
+    def extract_text(f):
+        doc = fitz.open(stream=f.read(), filetype="pdf")
+        return "\n".join(p.get_text() for p in doc)
 
-col1, col2 = st.columns(2)
-with col1:
-    bs_files = st.file_uploader("📄 Boletim Sanitário (BS)", type="pdf", accept_multiple_files=True)
-with col2:
-    gta_files = st.file_uploader("📋 GTAs", type="pdf", accept_multiple_files=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        bs_files = st.file_uploader("📄 Boletim Sanitário (BS)", type="pdf", accept_multiple_files=True, key="bs")
+    with col2:
+        gta_files = st.file_uploader("📋 GTAs", type="pdf", accept_multiple_files=True, key="gta")
 
-analisar = st.button("⚽ Analisar documentos", disabled=not (bs_files and gta_files), use_container_width=True, type="primary")
+    if st.button("⚽ Analisar BS e GTA", disabled=not (bs_files and gta_files), use_container_width=True, type="primary", key="btn_bs"):
+        with st.spinner("🐔 Os frangos estão analisando..."):
+            bs_text = "\n\n".join(f"--- BS: {f.name} ---\n{extract_text(f)}" for f in bs_files)
+            gta_text = "\n\n".join(f"--- GTA: {f.name} ---\n{extract_text(f)}" for f in gta_files)
 
-if analisar:
-    with st.spinner("🐔 Os frangos estão analisando..."):
-        bs_text = "\n\n".join(f"--- BS: {f.name} ---\n{extract_text(f)}" for f in bs_files)
-        gta_text = "\n\n".join(f"--- GTA: {f.name} ---\n{extract_text(f)}" for f in gta_files)
+        with st.spinner("🔍 Conferindo medicamentos e GTAs..."):
+            try:
+                client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
+                message = client.messages.create(
+                    model="claude-sonnet-4-5", max_tokens=4000,
+                    system=SYSTEM_PROMPT_BS,
+                    messages=[{"role": "user", "content": f"Analise:\n{bs_text}\n{gta_text}"}]
+                )
+                raw = message.content[0].text.replace("```json","").replace("```","").strip()
+                result = json.loads(raw)
 
-    with st.spinner("🔍 Conferindo medicamentos e GTAs..."):
-        try:
-            client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
-            message = client.messages.create(
-                model="claude-sonnet-4-5",
-                max_tokens=4000,
-                system=SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": f"Analise:\n{bs_text}\n{gta_text}"}]
-            )
-            raw = message.content[0].text.replace("```json","").replace("```","").strip()
-            result = json.loads(raw)
+                meds = result.get("medicamentos_encontrados", [])
+                data_abate = result.get("data_abate", "")
+                erros_carencia = verificar_carencias(meds, data_abate)
+                nucleos = result.get("nucleos", [])
+                produtor = result.get("produtor", "")
+                lote = result.get("lote", "")
 
-            meds = result.get("medicamentos_encontrados", [])
-            data_abate = result.get("data_abate", "")
-            erros_carencia = verificar_carencias(meds, data_abate)
-            nucleos = result.get("nucleos", [])
-            produtor = result.get("produtor", "")
-            lote = result.get("lote", "")
+                if erros_carencia:
+                    result["tem_problemas"] = True
+                    msgs = [{"categoria": "Medicamento", "item": ec["nome"],
+                        "detalhe": f"Carência não cumprida. Liberado a partir de {ec['data_limite']}, abate em {ec['data_abate']}."}
+                        for ec in erros_carencia]
+                    if nucleos:
+                        nucleos[0]["erros"] = nucleos[0].get("erros", []) + msgs
+                    else:
+                        nucleos.append({"nucleo": "Geral", "aviarios": "-", "erros": msgs, "alertas": []})
 
-            if erros_carencia:
-                result["tem_problemas"] = True
-                msgs = [{"categoria": "Medicamento", "item": ec["nome"],
-                    "detalhe": f"Carência não cumprida. Liberado a partir de {ec['data_limite']}, abate em {ec['data_abate']}."}
-                    for ec in erros_carencia]
-                if nucleos:
-                    nucleos[0]["erros"] = nucleos[0].get("erros", []) + msgs
+                st.divider()
+                tem_problemas = result.get("tem_problemas") and any(n.get("erros") or n.get("alertas") for n in nucleos)
+
+                if not tem_problemas:
+                    st.success(f"✅ {produtor} — Lote {lote} — Abate {data_abate}")
+                    st.markdown("""
+                    <div class="tudo-ok">
+                      <p class="tudo-ok-titulo">TUDO OK!</p>
+                      <p class="tudo-ok-sub">✅ PODE ASSINAR A PROGRAMAÇÃO ✅</p>
+                    </div>""", unsafe_allow_html=True)
                 else:
-                    nucleos.append({"nucleo": "Geral", "aviarios": "-", "erros": msgs, "alertas": []})
+                    tem_erro = any(n.get("erros") for n in nucleos)
+                    if tem_erro:
+                        st.error(f"**{produtor}** — Lote {lote} — Abate {data_abate}")
+                    else:
+                        st.warning(f"**{produtor}** — Lote {lote} — Abate {data_abate}")
+
+                    for nucleo in nucleos:
+                        erros = nucleo.get("erros", [])
+                        alertas = nucleo.get("alertas", [])
+                        if not erros and not alertas:
+                            continue
+                        n_num = nucleo.get("nucleo", "")
+                        aviarios = nucleo.get("aviarios", "")
+                        with st.expander(f"🏠 Núcleo {n_num} — Aviários: {aviarios}", expanded=True):
+                            if erros:
+                                for cat in set(e["categoria"] for e in erros):
+                                    st.markdown(f"**❌ {cat}**")
+                                    for e in [x for x in erros if x["categoria"] == cat]:
+                                        st.markdown(f"- **{e['item']}**: {e['detalhe']}")
+                            if alertas:
+                                for cat in set(a["categoria"] for a in alertas):
+                                    st.markdown(f"**⚠️ {cat}**")
+                                    for a in [x for x in alertas if x["categoria"] == cat]:
+                                        st.markdown(f"- **{a['item']}**: {a['detalhe']}")
+
+            except json.JSONDecodeError:
+                st.error("Erro ao interpretar resposta da IA. Tente novamente.")
+            except Exception as e:
+                st.error(f"Erro: {str(e)}")
+
+# ============================================================
+# ABA 2 — ORDENS DE CARREGAMENTO
+# ============================================================
+with aba2:
+
+    SYSTEM_PROMPT_ORDEM = """Você é especialista em conferência de Ordens de Carregamento de Aves da LAR Cooperativa Agroindustrial.
+
+Você receberá imagens ou texto extraído de ordens de carregamento escaneadas. Cada PDF pode conter múltiplas ordens (uma por página, exceto a primeira página que é a CAPA — ignore-a completamente).
+
+O nome do arquivo indica o aviário e lote (ex: 1792-35 = aviário 1792, lote 35).
+
+REGRAS DE VALIDAÇÃO POR ORDEM:
+
+1. MOTORISTA: deve estar preenchido a caneta. Se em branco: REPROVAR.
+2. PLACA: deve estar preenchida a caneta. Se em branco: REPROVAR.
+3. CAMPOS VERMELHOS (informações obrigatórias a caneta):
+   - Linha de recolha / endereço
+   - Horários REAIS de: Corte Ração, Saída UIA, Chegada Aviário, Início Carregamento, Término Carregamento, Saída do Aviário, Chegada na UIA
+   - Hora do Início do Abate
+   - Hora do Término do Abate
+   - Romaneio
+   - Responsável (assinatura)
+   - Assinatura do motorista
+   - Assinatura equipe carregamento
+   Se algum estiver em branco: REPROVAR.
+
+4. CAMPOS VERDES (checagem — devem ter marcação "C" ou similar):
+   - Corte Ração, Saída UIA, Chegada Aviário, Início Carregamento, Término Carregamento, Saída do Aviário, Chegada na UIA, Tempo de Transporte, Hora Início Abate, Hora Término Abate, Tempo Apanha e Abate, Tempo de Espera.
+   - Aceitar: "C", letra parecida com C, ou marcação que claramente representa conformidade.
+   - Se completamente em branco: REPROVAR.
+   - Se ilegível ou duvidoso: ALERTA.
+
+5. CAMPO AZUL (SIM ou NÃO — aves molhadas):
+   - Deve ter SIM ou NÃO marcado. Se em branco: REPROVAR.
+
+6. RASURAS:
+   - Rasura explícita (texto riscado, borrão sobre escrita anterior visível): REPROVAR.
+   - Sobreposição de linhas do formulário sobre a escrita: IGNORAR, é normal.
+   - Letra sobreposta levemente ou correção sutil: ALERTA.
+   - Em caso de dúvida: ALERTA.
+
+RESULTADO POR ORDEM:
+- APROVADA: tudo preenchido sem problemas.
+- ALERTA: tem algo duvidoso mas não impeditivo.
+- REPROVADA: falta informação obrigatória ou rasura explícita.
+
+Retorne SOMENTE JSON sem markdown:
+{
+  "aviario": "",
+  "lote": "",
+  "ordens": [
+    {
+      "carga": 1,
+      "motorista": "",
+      "placa": "",
+      "status": "aprovada|alerta|reprovada",
+      "problemas": [
+        {"tipo": "erro|alerta", "campo": "", "detalhe": ""}
+      ]
+    }
+  ]
+}
+
+Se não houver problemas em uma ordem, retorne problemas:[].
+Ignore completamente a primeira página (CAPA)."""
+
+    def extract_images_from_pdf(uploaded_file):
+        """Extrai cada página como imagem base64 para análise visual."""
+        import base64
+        data = uploaded_file.read()
+        doc = fitz.open(stream=data, filetype="pdf")
+        images = []
+        for i, page in enumerate(doc):
+            if i == 0:
+                continue  # Pula capa
+            mat = fitz.Matrix(2.0, 2.0)  # resolução 2x
+            pix = page.get_pixmap(matrix=mat)
+            img_bytes = pix.tobytes("jpeg")
+            b64 = base64.b64encode(img_bytes).decode()
+            images.append(b64)
+        return images
+
+    st.markdown("### 🚛 Conferência de Ordens de Carregamento")
+    st.caption("Faça upload das ordens. A primeira página (capa) será ignorada automaticamente.")
+
+    ordem_files = st.file_uploader(
+        "📁 Selecione os PDFs das ordens",
+        type="pdf",
+        accept_multiple_files=True,
+        key="ordens"
+    )
+
+    if st.button("🔍 Analisar Ordens", disabled=not ordem_files, use_container_width=True, type="primary", key="btn_ordem"):
+        client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
+
+        for ordem_file in ordem_files:
+            # Extrair aviário e lote do nome do arquivo
+            nome_arquivo = ordem_file.name.replace(".pdf", "").replace(".PDF", "")
 
             st.divider()
-            tem_problemas = result.get("tem_problemas") and any(n.get("erros") or n.get("alertas") for n in nucleos)
+            st.markdown(f"#### 📄 Arquivo: `{nome_arquivo}`")
 
-            if not tem_problemas:
-                st.success(f"✅ {produtor} — Lote {lote} — Abate {data_abate}")
-                st.markdown("""
-                <div class="tudo-ok">
-                  <p class="tudo-ok-titulo">TUDO OK!</p>
-                  <p class="tudo-ok-sub">✅ PODE ASSINAR A PROGRAMAÇÃO ✅</p>
-                </div>""", unsafe_allow_html=True)
-            else:
-                tem_erro = any(n.get("erros") for n in nucleos)
-                if tem_erro:
-                    st.error(f"**{produtor}** — Lote {lote} — Abate {data_abate}")
-                else:
-                    st.warning(f"**{produtor}** — Lote {lote} — Abate {data_abate}")
+            with st.spinner(f"Analisando {nome_arquivo}..."):
+                try:
+                    images = extract_images_from_pdf(ordem_file)
 
-                for nucleo in nucleos:
-                    erros = nucleo.get("erros", [])
-                    alertas = nucleo.get("alertas", [])
-                    if not erros and not alertas:
+                    if not images:
+                        st.warning(f"Nenhuma ordem encontrada em {nome_arquivo} (apenas capa?).")
                         continue
-                    n_num = nucleo.get("nucleo", "")
-                    aviarios = nucleo.get("aviarios", "")
-                    with st.expander(f"🏠 Núcleo {n_num} — Aviários: {aviarios}", expanded=True):
-                        if erros:
-                            for cat in set(e["categoria"] for e in erros):
-                                st.markdown(f"**❌ {cat}**")
-                                for e in [x for x in erros if x["categoria"] == cat]:
-                                    st.markdown(f"- **{e['item']}**: {e['detalhe']}")
-                        if alertas:
-                            for cat in set(a["categoria"] for a in alertas):
-                                st.markdown(f"**⚠️ {cat}**")
-                                for a in [x for x in alertas if x["categoria"] == cat]:
-                                    st.markdown(f"- **{a['item']}**: {a['detalhe']}")
 
-        except json.JSONDecodeError:
-            st.error("Erro ao interpretar resposta da IA. Tente novamente.")
-        except Exception as e:
-            st.error(f"Erro: {str(e)}")
+                    # Montar mensagem com imagens
+                    content = [
+                        {
+                            "type": "text",
+                            "text": f"Analise as ordens de carregamento abaixo. Nome do arquivo: {nome_arquivo}. Ignore a capa (já foi removida). Cada imagem é uma página com uma ou duas ordens."
+                        }
+                    ]
+                    for i, b64 in enumerate(images):
+                        content.append({
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/jpeg",
+                                "data": b64
+                            }
+                        })
+
+                    message = client.messages.create(
+                        model="claude-sonnet-4-5",
+                        max_tokens=4000,
+                        system=SYSTEM_PROMPT_ORDEM,
+                        messages=[{"role": "user", "content": content}]
+                    )
+
+                    raw = message.content[0].text.replace("```json","").replace("```","").strip()
+                    result = json.loads(raw)
+
+                    aviario = result.get("aviario", nome_arquivo)
+                    lote = result.get("lote", "-")
+                    ordens = result.get("ordens", [])
+
+                    aprovadas = [o for o in ordens if o["status"] == "aprovada"]
+                    alertas   = [o for o in ordens if o["status"] == "alerta"]
+                    reprovadas= [o for o in ordens if o["status"] == "reprovada"]
+
+                    # Resumo
+                    col_a, col_b, col_c = st.columns(3)
+                    col_a.metric("✅ Aprovadas", len(aprovadas))
+                    col_b.metric("⚠️ Alertas", len(alertas))
+                    col_c.metric("❌ Reprovadas", len(reprovadas))
+
+                    if not alertas and not reprovadas:
+                        st.markdown("""
+                        <div class="tudo-ok">
+                          <p class="tudo-ok-titulo">TUDO OK CHEFE!</p>
+                          <p class="tudo-ok-sub">✅ TODAS AS ORDENS APROVADAS ✅</p>
+                        </div>""", unsafe_allow_html=True)
+                    else:
+                        for ordem in ordens:
+                            status = ordem.get("status", "")
+                            if status == "aprovada":
+                                continue  # Aprovadas não aparecem
+                            carga = ordem.get("carga", "?")
+                            motorista = ordem.get("motorista", "-")
+                            placa = ordem.get("placa", "-")
+                            problemas = ordem.get("problemas", [])
+
+                            icon = "⚠️" if status == "alerta" else "❌"
+                            label = f"{icon} Carga {carga} — {motorista} | {placa}"
+
+                            with st.expander(label, expanded=True):
+                                for p in problemas:
+                                    if p["tipo"] == "erro":
+                                        st.markdown(f"❌ **{p['campo']}**: {p['detalhe']}")
+                                    else:
+                                        st.markdown(f"⚠️ **{p['campo']}**: {p['detalhe']}")
+
+                except json.JSONDecodeError:
+                    st.error(f"Erro ao interpretar resposta para {nome_arquivo}. Tente novamente.")
+                except Exception as e:
+                    st.error(f"Erro em {nome_arquivo}: {str(e)}")
