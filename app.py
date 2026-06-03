@@ -101,47 +101,6 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     text-shadow: 3px 3px 0px #003d1a;
 }
 .tudo-ok-sub { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.5rem; }
-
-/* CAMINHÃO DE AVES */
-.caminhao-container {
-    position: relative;
-    width: 100%;
-    padding: 1rem 0 1.5rem 0;
-    overflow: hidden;
-}
-.caminhao-svg { display: block; margin: 0 auto; }
-.erro-msg-caminhao {
-    position: absolute;
-    top: 18px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 52%;
-    min-height: 80px;
-    background: rgba(220,38,38,0.13);
-    border: 2px dashed #dc2626;
-    border-radius: 6px;
-    padding: 10px 14px;
-    font-size: 13px;
-    color: #7f1d1d;
-    overflow-y: auto;
-    max-height: 110px;
-}
-.alerta-msg-caminhao {
-    position: absolute;
-    top: 18px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 52%;
-    min-height: 80px;
-    background: rgba(234,179,8,0.13);
-    border: 2px dashed #ca8a04;
-    border-radius: 6px;
-    padding: 10px 14px;
-    font-size: 13px;
-    color: #713f12;
-    overflow-y: auto;
-    max-height: 110px;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -168,7 +127,7 @@ def frango_svg(nome_id, nome, numero, sexo, fa2=False, flo=False, pintinho=False
     return f"""<svg class="frango-svg" width="{w}" height="{h}" viewBox="0 0 72 115" xmlns="http://www.w3.org/2000/svg">
   <ellipse cx="36" cy="74" rx="22" ry="26" fill="{camisa}"/>
   <ellipse cx="36" cy="62" rx="20" ry="5" fill="{faixa}"/>
-  <text x="36" y="73" text-anchor="middle" font-family="Arial" font-size="{fs_nome}" font-weight="700" fill="{faixa}">{nome_curto}</text>
+  <text x="36" y="71" text-anchor="middle" font-family="Arial" font-size="{fs_nome}" font-weight="700" fill="{faixa}">{nome_curto}</text>
   <text x="36" y="82" text-anchor="middle" font-family="Arial Black" font-size="8" font-weight="900" fill="{faixa}">#{numero}</text>
   {crista_p}
   <rect x="30" y="43" width="12" height="10" fill="{pele}" rx="3"/>
@@ -203,44 +162,6 @@ def bola_svg(small=False):
   <polygon points="8,8 3,9 3,15 7,17 10,13" fill="none" stroke="#9ca3af" stroke-width="0.8"/>
 </svg>"""
 
-def caminhao_svg():
-    return """<svg class="caminhao-svg" width="700" height="160" viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg">
-  <!-- Carroceria (gaiola) -->
-  <rect x="120" y="20" width="420" height="110" fill="#b45309" rx="4"/>
-  <rect x="122" y="22" width="416" height="106" fill="#fef3c7" rx="3"/>
-  <!-- Grades da gaiola -->
-  <line x1="160" y1="22" x2="160" y2="128" stroke="#b45309" stroke-width="3"/>
-  <line x1="200" y1="22" x2="200" y2="128" stroke="#b45309" stroke-width="3"/>
-  <line x1="240" y1="22" x2="240" y2="128" stroke="#b45309" stroke-width="3"/>
-  <line x1="280" y1="22" x2="280" y2="128" stroke="#b45309" stroke-width="3"/>
-  <line x1="320" y1="22" x2="320" y2="128" stroke="#b45309" stroke-width="3"/>
-  <line x1="360" y1="22" x2="360" y2="128" stroke="#b45309" stroke-width="3"/>
-  <line x1="400" y1="22" x2="400" y2="128" stroke="#b45309" stroke-width="3"/>
-  <line x1="440" y1="22" x2="440" y2="128" stroke="#b45309" stroke-width="3"/>
-  <line x1="480" y1="22" x2="480" y2="128" stroke="#b45309" stroke-width="3"/>
-  <line x1="122" y1="75" x2="538" y2="75" stroke="#b45309" stroke-width="3"/>
-  <!-- Cabine -->
-  <rect x="28" y="45" width="100" height="85" fill="#dc2626" rx="8"/>
-  <rect x="35" y="52" width="55" height="40" fill="#93c5fd" rx="4" opacity="0.8"/>
-  <rect x="55" y="48" width="68" height="8" fill="#b91c1c" rx="2"/>
-  <!-- Para-choque -->
-  <rect x="18" y="118" width="115" height="8" fill="#6b7280" rx="3"/>
-  <!-- Eixos -->
-  <rect x="0" y="126" width="700" height="6" fill="#d97706"/>
-  <!-- Pneus cabine -->
-  <circle cx="68" cy="142" r="16" fill="#1e293b"/>
-  <circle cx="68" cy="142" r="8" fill="#6b7280"/>
-  <!-- Pneus traseiros -->
-  <circle cx="480" cy="142" r="16" fill="#1e293b"/>
-  <circle cx="480" cy="142" r="8" fill="#6b7280"/>
-  <circle cx="520" cy="142" r="16" fill="#1e293b"/>
-  <circle cx="520" cy="142" r="8" fill="#6b7280"/>
-  <!-- Farol -->
-  <ellipse cx="22" cy="80" rx="8" ry="6" fill="#fef08a"/>
-  <!-- Texto LAR no caminhão -->
-  <text x="175" y="16" font-family="Arial Black" font-size="11" font-weight="900" fill="#b45309" text-anchor="middle">⚠ DOCUMENTO COM PROBLEMAS ⚠</text>
-</svg>"""
-
 colaboradores = [
     {"nome": "Hagatah", "id": "hagatah", "numero": "7",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False, "left": 2,  "bottom": 25},
     {"nome": "Sarah",   "id": "sarah",   "numero": "9",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False, "left": 13, "bottom": 40},
@@ -255,10 +176,10 @@ colaboradores = [
 
 campo_html = '<div class="campo-frangos" id="campo-frangos">'
 for c in colaboradores:
-    campo_html += f"""<div class="frango-abs" id="wrap-{c['id']}" style="left:{c['left']}%;bottom:{c['bottom']}px;">
-    {frango_svg(c['id'], c['nome'], c['numero'], c['sexo'], c['fa2'], c['flo'], c['pintinho'])}
-    {bola_svg(c['pintinho'])}
-</div>"""
+    campo_html += f'<div class="frango-abs" id="wrap-{c["id"]}" style="left:{c["left"]}%;bottom:{c["bottom"]}px;">'
+    campo_html += frango_svg(c["id"], c["nome"], c["numero"], c["sexo"], c["fa2"], c["flo"], c["pintinho"])
+    campo_html += bola_svg(c["pintinho"])
+    campo_html += '</div>'
 campo_html += '</div>'
 
 st.markdown(f"""
@@ -267,7 +188,6 @@ st.markdown(f"""
   <p class="lar-sub">COOPERATIVA AGROINDUSTRIAL &nbsp;·&nbsp; VALIDADOR BS e GTA &nbsp;·&nbsp; SIF 797</p>
   {campo_html}
 </div>
-<div id="trigger-anim" style="display:none">0</div>
 """, unsafe_allow_html=True)
 
 CARENCIAS = {
@@ -313,8 +233,12 @@ def verificar_carencias(medicamentos_bs, data_abate_str):
             continue
         data_limite = data_fim + timedelta(days=dias)
         if data_abate < data_limite:
-            erros.append({"nome": med.get("nome"), "data_fim": data_fim_str,
-                "data_limite": data_limite.strftime("%d/%m/%Y"), "data_abate": data_abate_str})
+            erros.append({
+                "nome": med.get("nome"),
+                "data_fim": data_fim_str,
+                "data_limite": data_limite.strftime("%d/%m/%Y"),
+                "data_abate": data_abate_str
+            })
     return erros
 
 SYSTEM_PROMPT = """Você é especialista em documentos veterinários de frigoríficos de frango da LAR Cooperativa Agroindustrial.
@@ -330,12 +254,14 @@ VALIDAÇÕES:
 2. MORTALIDADE:
    Fórmula: (total_pintos - remanescentes_1o - programadas_1o) / total_pintos * 100
    - Se > 5% E sem mensagem "MORTALIDADE ACIMA DE 5%" no BS: ERRO simples.
-   - Se <= 5% E com mensagem "MORTALIDADE ACIMA DE 5%": ALERTA simples.
+   - Se <= 5% E com a frase "MORTALIDADE ACIMA DE 5%" em qualquer parte do BS (incluindo declarações ou observações): apenas ALERTA simples. NÃO gerar ERRO nesse caso.
+   - ATENÇÃO: a frase "MORTALIDADE ACIMA DE 5% NÃO SENDO EM 72 HORAS" também conta como presença da mensagem — não gerar erro.
    - Se valor divergir do declarado (arredondamentos): ALERTA simples.
 
 3. MEDICAMENTOS: se não estiver na lista oficial: ALERTA. NÃO calcule carência.
 
 4. CAMPOS OBRIGATÓRIOS ausentes: ERRO.
+   Campos: nome estabelecimento, georreferenciamento, município/UF, cadastro SVO, lote/núcleo, nº galpões, médico veterinário CRMV, data alojamento, GTA pintos, nº pintos alojados, data carregamento, resultado salmonela.
 
 5. EXTRAÇÃO: inclua todos os medicamentos com nome e data_fim.
 
@@ -356,20 +282,7 @@ with col2:
 
 analisar = st.button("⚽ Analisar documentos", disabled=not (bs_files and gta_files), use_container_width=True, type="primary")
 
-# Animação via JS — dispara quando o botão é clicado (estado muda)
 if analisar:
-    st.markdown("""
-    <script>
-    (function() {
-        var wraps = document.querySelectorAll('.frango-abs');
-        wraps.forEach(function(w) { w.classList.add('chutando'); });
-        setTimeout(function() {
-            wraps.forEach(function(w) { w.classList.remove('chutando'); });
-        }, 2800);
-    })();
-    </script>
-    """, unsafe_allow_html=True)
-
     with st.spinner("🐔 Os frangos estão analisando..."):
         bs_text = "\n\n".join(f"--- BS: {f.name} ---\n{extract_text(f)}" for f in bs_files)
         gta_text = "\n\n".join(f"--- GTA: {f.name} ---\n{extract_text(f)}" for f in gta_files)
@@ -378,7 +291,8 @@ if analisar:
         try:
             client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
             message = client.messages.create(
-                model="claude-sonnet-4-5", max_tokens=4000,
+                model="claude-sonnet-4-5",
+                max_tokens=4000,
                 system=SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": f"Analise:\n{bs_text}\n{gta_text}"}]
             )
@@ -414,9 +328,10 @@ if analisar:
                 </div>""", unsafe_allow_html=True)
             else:
                 tem_erro = any(n.get("erros") for n in nucleos)
-
-                # Cabeçalho produtor
-                st.markdown(f"**{produtor}** — Lote {lote} — Abate {data_abate}")
+                if tem_erro:
+                    st.error(f"**{produtor}** — Lote {lote} — Abate {data_abate}")
+                else:
+                    st.warning(f"**{produtor}** — Lote {lote} — Abate {data_abate}")
 
                 for nucleo in nucleos:
                     erros = nucleo.get("erros", [])
@@ -425,33 +340,17 @@ if analisar:
                         continue
                     n_num = nucleo.get("nucleo", "")
                     aviarios = nucleo.get("aviarios", "")
-
-                    # Montar conteúdo HTML da caçamba
-                    conteudo_html = ""
-                    if erros:
-                        for cat in set(e["categoria"] for e in erros):
-                            conteudo_html += f"<b>❌ {cat}</b><br>"
-                            for e in [x for x in erros if x["categoria"] == cat]:
-                                conteudo_html += f"• <b>{e['item']}</b>: {e['detalhe']}<br>"
-                    if alertas:
-                        for cat in set(a["categoria"] for a in alertas):
-                            conteudo_html += f"<b>⚠️ {cat}</b><br>"
-                            for a in [x for x in alertas if x["categoria"] == cat]:
-                                conteudo_html += f"• <b>{a['item']}</b>: {a['detalhe']}<br>"
-
-                    css_class = "erro-msg-caminhao" if erros else "alerta-msg-caminhao"
-
-                    st.markdown(f"""
-                    <div style="margin-bottom:1.5rem;">
-                      <div style="font-weight:700; margin-bottom:6px; color:#1e293b;">
-                        🏠 Núcleo {n_num} — Aviários: {aviarios}
-                      </div>
-                      <div class="caminhao-container">
-                        {caminhao_svg()}
-                        <div class="{css_class}">{conteudo_html}</div>
-                      </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    with st.expander(f"🏠 Núcleo {n_num} — Aviários: {aviarios}", expanded=True):
+                        if erros:
+                            for cat in set(e["categoria"] for e in erros):
+                                st.markdown(f"**❌ {cat}**")
+                                for e in [x for x in erros if x["categoria"] == cat]:
+                                    st.markdown(f"- **{e['item']}**: {e['detalhe']}")
+                        if alertas:
+                            for cat in set(a["categoria"] for a in alertas):
+                                st.markdown(f"**⚠️ {cat}**")
+                                for a in [x for x in alertas if x["categoria"] == cat]:
+                                    st.markdown(f"- **{a['item']}**: {a['detalhe']}")
 
         except json.JSONDecodeError:
             st.error("Erro ao interpretar resposta da IA. Tente novamente.")
