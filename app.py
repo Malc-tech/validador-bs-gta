@@ -6,22 +6,20 @@ from datetime import datetime, timedelta
 
 st.set_page_config(page_title="Validador BS e GTA — LAR", page_icon="🐔", layout="wide")
 
-# CSS global
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap');
-
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 
 .lar-header {
     background: linear-gradient(135deg, #003d1a 0%, #006629 50%, #003d1a 100%);
     border-radius: 20px;
-    padding: 1.5rem 2rem 0.5rem 2rem;
-    margin-bottom: 1rem;
+    padding: 1.5rem 2rem 1rem 2rem;
+    margin-bottom: 1.5rem;
     text-align: center;
     border: 3px solid #FFDF00;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 .lar-logo {
     font-family: 'Bebas Neue', cursive;
@@ -34,51 +32,67 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 }
 .lar-sub {
     color: #ffffff;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     letter-spacing: 0.2em;
     margin-top: -0.3rem;
     margin-bottom: 0.5rem;
     opacity: 0.85;
 }
-.frangos-container {
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    gap: 6px;
-    padding: 0.5rem 0;
-    flex-wrap: wrap;
-    min-height: 130px;
+
+/* Campo de frangos espalhados */
+.campo-frangos {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    margin: 0.5rem 0;
 }
-.frango-wrap {
+.frango-abs {
+    position: absolute;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.frango-abs:hover .frango-svg {
+    animation: acenar 0.6s ease-in-out infinite alternate;
+}
+.frango-abs:hover .frango-nome {
+    opacity: 1;
 }
 .frango-nome {
     font-size: 9px;
     color: #FFDF00;
     font-weight: 700;
-    letter-spacing: 0.05em;
     text-align: center;
-    max-width: 70px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    margin-top: 2px;
+    white-space: nowrap;
 }
 
-/* Animação chute */
+@keyframes acenar {
+    0%   { transform: rotate(-12deg) translateY(-4px); }
+    100% { transform: rotate(12deg) translateY(-4px); }
+}
+
 @keyframes chute {
-    0%   { transform: rotate(0deg) translateY(0); }
-    20%  { transform: rotate(-15deg) translateY(-5px); }
-    40%  { transform: rotate(20deg) translateY(-10px); }
-    60%  { transform: rotate(-10deg) translateY(-5px); }
-    80%  { transform: rotate(10deg) translateY(-3px); }
-    100% { transform: rotate(0deg) translateY(0); }
+    0%   { transform: rotate(0deg) translateY(0px); }
+    25%  { transform: rotate(-20deg) translateY(-8px); }
+    50%  { transform: rotate(25deg) translateY(-14px); }
+    75%  { transform: rotate(-10deg) translateY(-6px); }
+    100% { transform: rotate(0deg) translateY(0px); }
 }
 @keyframes bola-voo {
-    0%   { transform: translateX(0) translateY(0) rotate(0deg); opacity:1; }
-    100% { transform: translateX(120px) translateY(-60px) rotate(360deg); opacity:0; }
+    0%   { transform: translateX(0px) translateY(0px) rotate(0deg); opacity: 1; }
+    100% { transform: translateX(100px) translateY(-80px) rotate(720deg); opacity: 0; }
 }
-.animando .frango-svg { animation: chute 0.8s ease-in-out 3; }
-.animando .bola-svg  { animation: bola-voo 0.8s ease-in-out 3 forwards; }
+.chutando .frango-svg {
+    animation: chute 0.7s ease-in-out 3;
+}
+.chutando .bola-svg {
+    animation: bola-voo 0.7s ease-in-out forwards;
+}
 
 .stButton > button {
     background: linear-gradient(135deg, #009c3b, #006629) !important;
@@ -89,10 +103,12 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     border-radius: 12px !important;
     padding: 0.6rem 2rem !important;
     letter-spacing: 0.05em !important;
+    transition: all 0.2s !important;
 }
 .stButton > button:hover {
     background: linear-gradient(135deg, #FFDF00, #ffc800) !important;
     color: #003d1a !important;
+    transform: scale(1.03) !important;
 }
 
 .tudo-ok {
@@ -105,14 +121,14 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 }
 .tudo-ok-titulo {
     font-family: 'Bebas Neue', cursive;
-    font-size: 4rem;
+    font-size: 5rem;
     color: #FFDF00;
     letter-spacing: 0.2em;
     margin: 0;
     text-shadow: 3px 3px 0px #003d1a;
 }
 .tudo-ok-sub {
-    font-size: 1.3rem;
+    font-size: 1.4rem;
     font-weight: 700;
     color: #ffffff;
     margin-top: 0.5rem;
@@ -120,88 +136,54 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 </style>
 """, unsafe_allow_html=True)
 
-# SVG de cada frango
-def frango_svg(nome, numero, sexo, faixa_amarela_2=False, faixa_laranja=False, pintinho=False):
-    escala = 0.7 if pintinho else 1.0
+def frango_svg(nome_id, sexo, fa2=False, flo=False, pintinho=False):
+    escala = 0.72 if pintinho else 1.0
     h = int(110 * escala)
     w = int(70 * escala)
-    sx = escala
-    # cores
     pele = "#FDE68A"
     camisa = "#009c3b"
     faixa = "#FFDF00"
     crista = "#ef4444" if sexo == "galo" else "#f97316"
-    barb = "#ef4444"
+    fa_cor_esq = "#FFDF00" if fa2 else camisa
+    fa_cor_dir = "#FF6B00" if flo else ("#FFDF00" if fa2 else camisa)
 
-    fa2 = faixa_amarela_2
-    flo = faixa_laranja
-
-    svg = f"""<svg class="frango-svg" width="{w}" height="{h}" viewBox="0 0 70 110" xmlns="http://www.w3.org/2000/svg">
-  <!-- Corpo -->
-  <ellipse cx="35" cy="72" rx="22" ry="26" fill="{camisa}"/>
-  <!-- Faixa camisa -->
-  <ellipse cx="35" cy="60" rx="20" ry="5" fill="{faixa}"/>
-  <!-- Número -->
-  <text x="35" y="80" text-anchor="middle" font-family="Arial Black" font-size="9" font-weight="900" fill="{faixa}">{numero}</text>
-  <!-- Pescoço -->
-  <rect x="29" y="42" width="12" height="10" fill="{pele}" rx="3"/>
-  <!-- Cabeça -->
-  <ellipse cx="35" cy="34" rx="18" ry="17" fill="{pele}"/>
-  <!-- Crista -->"""
+    crista_svg = ""
     if sexo == "galo":
-        svg += f"""
-  <path d="M35,18 Q38,10 42,17 Q46,8 49,17 Q44,20 35,21Z" fill="{crista}"/>"""
+        crista_svg = f'<path d="M35,18 Q38,10 42,17 Q46,8 49,17 Q44,20 35,21Z" fill="{crista}"/>'
+        barb_svg = f'<path d="M33,42 Q28,50 31,56 Q35,60 39,56 Q42,50 37,42Z" fill="{crista}"/>'
     else:
-        svg += f"""
-  <path d="M33,18 Q35,12 37,18 Q39,10 41,18 Q37,20 33,20Z" fill="{crista}"/>"""
-    svg += f"""
-  <!-- Bico -->
+        crista_svg = f'<path d="M33,18 Q35,12 37,18 Q39,10 41,18 Q37,20 33,20Z" fill="{crista}"/>'
+        barb_svg = f'<path d="M34,42 Q31,47 33,51 Q35,54 37,51 Q39,47 36,42Z" fill="{crista}"/>'
+
+    return f"""<svg class="frango-svg" id="svg-{nome_id}" width="{w}" height="{h}" viewBox="0 0 70 110" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="35" cy="72" rx="22" ry="26" fill="{camisa}"/>
+  <ellipse cx="35" cy="60" rx="20" ry="5" fill="{faixa}"/>
+  {crista_svg}
+  <rect x="29" y="42" width="12" height="10" fill="{pele}" rx="3"/>
+  <ellipse cx="35" cy="34" rx="18" ry="17" fill="{pele}"/>
   <path d="M35,36 L42,39 L35,42Z" fill="#f97316"/>
   <path d="M35,36 L28,39 L35,42Z" fill="#fb923c"/>
-  <!-- Olhos -->
   <ellipse cx="27" cy="30" rx="5" ry="5.5" fill="white"/>
   <ellipse cx="28" cy="30" rx="3" ry="3.5" fill="#1e293b"/>
   <ellipse cx="29" cy="28" rx="1.2" ry="1.2" fill="white"/>
   <ellipse cx="43" cy="30" rx="5" ry="5.5" fill="white"/>
   <ellipse cx="44" cy="30" rx="3" ry="3.5" fill="#1e293b"/>
   <ellipse cx="45" cy="28" rx="1.2" ry="1.2" fill="white"/>
-  <!-- Bochecha -->
   <ellipse cx="20" cy="36" rx="4" ry="3" fill="#fca5a5" opacity="0.6"/>
   <ellipse cx="50" cy="36" rx="4" ry="3" fill="#fca5a5" opacity="0.6"/>
-  <!-- Barbela -->"""
-    if sexo == "galo":
-        svg += f"""
-  <path d="M33,42 Q28,50 31,56 Q35,60 39,56 Q42,50 37,42Z" fill="{barb}"/>"""
-    else:
-        svg += f"""
-  <path d="M34,42 Q31,47 33,51 Q35,54 37,51 Q39,47 36,42Z" fill="{barb}"/>"""
-
-    # Braços / asas
-    fa_cor_esq = "#FFDF00" if fa2 else camisa
-    fa_cor_dir = "#FF6B00" if flo else ("#FFDF00" if fa2 else camisa)
-
-    svg += f"""
-  <!-- Asa esquerda -->
+  {barb_svg}
   <path d="M13,62 Q5,55 4,46 Q6,40 11,44 Q14,52 18,60Z" fill="{pele}"/>
-  <!-- Faixa esq -->
   <path d="M10,52 Q7,50 6,46 Q8,44 10,47 Q11,50 12,53Z" fill="{fa_cor_esq}"/>
-  <!-- Asa direita -->
   <path d="M57,62 Q65,55 66,46 Q64,40 59,44 Q56,52 52,60Z" fill="{pele}"/>
-  <!-- Faixa dir -->
   <path d="M60,52 Q63,50 64,46 Q62,44 60,47 Q59,50 58,53Z" fill="{fa_cor_dir}"/>
-  <!-- Pernas -->
   <path d="M28,95 Q24,105 22,108" fill="none" stroke="#d97706" stroke-width="5" stroke-linecap="round"/>
-  <path d="M42,95 Q48,103 52,107" fill="none" stroke="#d97706" stroke-width="5" stroke-linecap="round"/>
-  <!-- Chuteiras -->
+  <path d="M42,95 Q50,103 54,107" fill="none" stroke="#d97706" stroke-width="5" stroke-linecap="round"/>
   <ellipse cx="21" cy="108" rx="7" ry="3.5" fill="#1e293b" transform="rotate(-10,21,108)"/>
-  <ellipse cx="53" cy="107" rx="7" ry="3.5" fill="#1e293b" transform="rotate(20,53,107)"/>
-  <!-- Nome na camisa -->
-  <text x="35" y="70" text-anchor="middle" font-family="Arial" font-size="5.5" font-weight="700" fill="{faixa}">{nome[:7]}</text>
+  <ellipse cx="54" cy="107" rx="7" ry="3.5" fill="#1e293b" transform="rotate(25,54,107)"/>
 </svg>"""
-    return svg
 
-def bola_svg(pequena=False):
-    s = 18 if pequena else 24
+def bola_svg(small=False):
+    s = 18 if small else 22
     return f"""<svg class="bola-svg" width="{s}" height="{s}" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
   <circle cx="12" cy="12" r="11" fill="white" stroke="#9ca3af" stroke-width="1"/>
   <polygon points="12,4 16,8 14,13 10,13 8,8" fill="#1e293b"/>
@@ -209,51 +191,62 @@ def bola_svg(pequena=False):
   <polygon points="8,8 3,9 3,15 7,17 10,13" fill="none" stroke="#9ca3af" stroke-width="0.8"/>
 </svg>"""
 
-# Dados dos colaboradores
+# Colaboradores com posições espalhadas pelo campo (left%, bottom px)
 colaboradores = [
-    {"nome": "Hagatah",    "numero": "7",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False},
-    {"nome": "Sarah",      "numero": "9",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False},
-    {"nome": "Sara",       "numero": "11", "sexo": "galinha", "fa2": True,  "flo": False, "pintinho": False},
-    {"nome": "Michael",    "numero": "10", "sexo": "galo",    "fa2": True,  "flo": False, "pintinho": False},
-    {"nome": "Edmar",      "numero": "5",  "sexo": "galo",    "fa2": False, "flo": True,  "pintinho": False},
-    {"nome": "M. Jovem",   "numero": "8",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": True},
-    {"nome": "Maria",      "numero": "3",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False},
-    {"nome": "Beatriz",    "numero": "6",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False},
-    {"nome": "Vinicius",   "numero": "4",  "sexo": "galo",    "fa2": False, "flo": False, "pintinho": True},
+    {"nome": "Hagatah",  "id": "hagatah",  "numero": "7",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False, "left": 3,  "bottom": 20},
+    {"nome": "Sarah",    "id": "sarah",    "numero": "9",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False, "left": 14, "bottom": 35},
+    {"nome": "Sara",     "id": "sara",     "numero": "11", "sexo": "galinha", "fa2": True,  "flo": False, "pintinho": False, "left": 25, "bottom": 15},
+    {"nome": "Michael",  "id": "michael",  "numero": "10", "sexo": "galo",    "fa2": True,  "flo": False, "pintinho": False, "left": 37, "bottom": 30},
+    {"nome": "Edmar",    "id": "edmar",    "numero": "5",  "sexo": "galo",    "fa2": False, "flo": True,  "pintinho": False, "left": 50, "bottom": 18},
+    {"nome": "Maria",    "id": "maria_j",  "numero": "8",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": True,  "left": 61, "bottom": 38},
+    {"nome": "Maria",    "id": "maria",    "numero": "3",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False, "left": 70, "bottom": 20},
+    {"nome": "Beatriz",  "id": "beatriz",  "numero": "6",  "sexo": "galinha", "fa2": False, "flo": False, "pintinho": False, "left": 81, "bottom": 35},
+    {"nome": "Vinicius", "id": "vinicius", "numero": "4",  "sexo": "galo",    "fa2": False, "flo": False, "pintinho": True,  "left": 91, "bottom": 18},
 ]
 
-# Montar frangos HTML
-frangos_html = '<div class="frangos-container" id="frangos-field">'
+campo_html = '<div class="campo-frangos" id="campo-frangos">'
 for c in colaboradores:
-    frangos_html += f'<div class="frango-wrap">'
-    frangos_html += frango_svg(c["nome"], c["numero"], c["sexo"], c["fa2"], c["flo"], c["pintinho"])
-    frangos_html += bola_svg(c["pintinho"])
-    frangos_html += f'<div class="frango-nome">{c["nome"]}</div>'
-    frangos_html += '</div>'
-frangos_html += '</div>'
+    w = 50 if c["pintinho"] else 70
+    campo_html += f"""<div class="frango-abs" id="wrap-{c['id']}" style="left:{c['left']}%;bottom:{c['bottom']}px;">
+    {frango_svg(c['id'], c['sexo'], c['fa2'], c['flo'], c['pintinho'])}
+    {bola_svg(c['pintinho'])}
+    <div class="frango-nome">{c['nome']}<br>#{c['numero']}</div>
+</div>"""
+campo_html += '</div>'
 
-# Header
 st.markdown(f"""
 <div class="lar-header">
   <p class="lar-logo">LAR</p>
   <p class="lar-sub">COOPERATIVA AGROINDUSTRIAL &nbsp;·&nbsp; VALIDADOR BS e GTA &nbsp;·&nbsp; SIF 797</p>
-  {frangos_html}
+  {campo_html}
 </div>
-""", unsafe_allow_html=True)
 
-# JS animação ao clicar
-st.markdown("""
 <script>
-function animarFrangos() {
-    var field = document.getElementById('frangos-field');
-    if (!field) return;
-    field.querySelectorAll('.frango-wrap').forEach(function(w) { w.classList.add('animando'); });
-    setTimeout(function() {
-        field.querySelectorAll('.frango-wrap').forEach(function(w) { w.classList.remove('animando'); });
-    }, 2500);
-}
-var btn = window.parent.document.querySelector('.stButton button');
-if (btn) { btn.addEventListener('click', animarFrangos); }
+(function() {{
+    function animarTodos() {{
+        var wraps = document.querySelectorAll('.frango-abs');
+        wraps.forEach(function(w) {{
+            w.classList.add('chutando');
+        }});
+        setTimeout(function() {{
+            wraps.forEach(function(w) {{ w.classList.remove('chutando'); }});
+        }}, 2200);
+    }}
+
+    function ligarBotao() {{
+        var btns = window.parent.document.querySelectorAll('.stButton button');
+        btns.forEach(function(btn) {{
+            if (btn.textContent.includes('Analisar')) {{
+                btn.removeEventListener('click', animarTodos);
+                btn.addEventListener('click', animarTodos);
+            }}
+        }});
+    }}
+
+    // Tenta ligar imediatamente e de novo após 2s
+    ligarBotao();
+    setTimeout(ligarBotao, 2000);
+}})();
 </script>
 """, unsafe_allow_html=True)
 
@@ -297,9 +290,7 @@ def verificar_carencias(medicamentos_bs, data_abate_str):
             if key in nome or nome in key:
                 dias = val
                 break
-        if dias is None:
-            continue
-        if dias <= 1:
+        if dias is None or dias <= 1:
             continue
         data_limite = data_fim + timedelta(days=dias)
         if data_abate < data_limite:
@@ -328,7 +319,7 @@ VALIDAÇÕES:
    - Se o valor calculado divergir do declarado (considerando arredondamentos): ALERTA simples sem mostrar cálculos.
    - Se tudo correto: não retornar nada sobre mortalidade.
 
-3. MEDICAMENTOS — APENAS:
+3. MEDICAMENTOS:
    - Se medicamento não estiver na lista oficial: ALERTA.
    - NÃO calcule carência — isso já foi calculado pelo sistema.
 
