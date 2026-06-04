@@ -288,7 +288,7 @@ VALIDAÇÕES:
 5. CAMPOS OBRIGATÓRIOS ausentes: ERRO.
    Campos: nome estabelecimento, georreferenciamento, município/UF, cadastro SVO, lote/núcleo, nº galpões, médico veterinário CRMV, data alojamento, GTA pintos, nº pintos alojados, data carregamento, resultado salmonela.
 
-6. RASTREABILIDADE PINTOS: verificar se a quantidade de linhas de GTA de pintos alojados é IGUAL ao número de galpões declarado no BS. Se igual: correto, não retornar nada. Se diferente: ALERTA.
+6. RASTREABILIDADE PINTOS: verificar se a quantidade de linhas de GTA de pintos alojados é IGUAL ao número de galpões declarado no BS. Se IGUAL: SILÊNCIO TOTAL, não retornar absolutamente nada. Se DIFERENTE: ALERTA.
 
 7. EXTRAÇÃO: inclua todos os medicamentos com nome e data_fim.
 
