@@ -256,11 +256,9 @@ Analise o BS e as GTAs. Retorne APENAS problemas encontrados. Itens corretos NÃ
 
 VALIDAÇÕES:
 1. CRUZAMENTO BS x GTA (só GTAs fornecidas):
-   - Compare aves programadas no BS com TOTAL na GTA. Se diferente: ERRO.
-   - Compare aviário/núcleo do BS com o da GTA. Se diferente: ERRO.
-   - Compare SIF destino. Se diferente: ERRO.
-   - Se GTA listada no BS não foi fornecida MAS o destino é SIF 797: SEMPRE retornar ALERTA com número da GTA faltante.
-   - Se o destino do carregamento NÃO for SIF 797: ignorar completamente essa linha.
+   - Para cada GTA que EU ENVIEI: compare aves programadas no BS com TOTAL na GTA. Se diferente: ERRO. Compare aviário/núcleo. Se diferente: ERRO. Compare SIF destino na GTA. Se for diferente de 797: ERRO.
+   - Se uma GTA listada no BS NÃO foi enviada E o destino declarado no BS é SIF 797: ALERTA informando GTA faltante.
+   - Se uma GTA listada no BS NÃO foi enviada E o destino declarado no BS NÃO é SIF 797: ignorar completamente, não retornar nada.
 
 2. RASTREABILIDADE — GTA DOS PINTOS:
    - NÃO verificar se as GTAs dos pintos foram enviadas.
@@ -269,10 +267,12 @@ VALIDAÇÕES:
 3. MORTALIDADE:
    Fórmula CORRETA: (total_pintos_alojados - aves_remanescentes_1o_carregamento - aves_programadas_1o_carregamento) / total_pintos_alojados * 100
    ATENÇÃO: use os valores do PRIMEIRO carregamento para remanescentes e programadas. O total de pintos alojados é a SOMA de todos os pintos alojados do BS.
-   - Se mortalidade calculada > 5% E a frase "MORTALIDADE ACIMA DE 5%" (ou "MORTALIDADE ACIMA DE 5% NÃO SENDO EM 72 HORAS") NÃO constar no BS: ERRO simples, sem mostrar cálculos.
-   - Se mortalidade calculada <= 5%: não retornar nada, independente de ter ou não a frase no BS.
-   - Se mortalidade calculada > 5% E a frase CONSTAR no BS: não retornar nada, está correto.
-   - Se o valor calculado divergir levemente do declarado por arredondamento: não retornar nada.
+   REGRA SIMPLES — só existe UMA situação de ERRO:
+   - Se mortalidade calculada > 5% E a frase "MORTALIDADE ACIMA DE 5%" (em qualquer variação) NÃO constar em nenhuma parte do BS: ERRO simples, sem mostrar cálculos.
+   Em TODOS os outros casos: não retornar nada. Exemplos de casos que NÃO devem gerar retorno:
+   - Mortalidade <= 5%, com ou sem a frase: OK, silêncio.
+   - Mortalidade > 5% E a frase CONSTA no BS: OK, silêncio.
+   - Divergência leve entre calculado e declarado: OK, silêncio.
 
 4. MEDICAMENTOS: se não estiver na lista oficial: ALERTA. NÃO calcule carência.
 
