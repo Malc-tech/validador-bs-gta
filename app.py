@@ -221,6 +221,20 @@ with aba1:
                 pass
         return None
 
+    def verificar_mortalidade(dados):
+        if not dados:
+            return None
+        total = dados.get("total_pintos", 0)
+        rem = dados.get("remanescentes_1o", 0)
+        prog = dados.get("programadas_1o", 0)
+        tem_frase = dados.get("tem_frase_5pct", False)
+        if not total:
+            return None
+        mort = (total - rem - prog) / total * 100
+        if mort > 5 and not tem_frase:
+            return {"erro": True, "msg": f"Mortalidade acima de 5% sem declaração no BS."}
+        return None
+
     def verificar_carencias(medicamentos_bs, data_abate_str):
         data_abate = parse_date(data_abate_str)
         if not data_abate:
@@ -266,14 +280,8 @@ VALIDAÇÕES:
    - Verificar apenas se a quantidade de linhas de GTA de pintos alojados é igual ao número de galpões declarado no BS. Se diferente: ALERTA.
 
 3. MORTALIDADE:
-   Fórmula CORRETA: (total_pintos_alojados - aves_remanescentes_1o_carregamento - aves_programadas_1o_carregamento) / total_pintos_alojados * 100
-   ATENÇÃO: use os valores do PRIMEIRO carregamento para remanescentes e programadas. O total de pintos alojados é a SOMA de todos os pintos alojados do BS.
-   REGRA SIMPLES — só existe UMA situação de ERRO:
-   - Se mortalidade calculada > 5% E a frase "MORTALIDADE ACIMA DE 5%" (em qualquer variação) NÃO constar em nenhuma parte do BS: ERRO simples, sem mostrar cálculos.
-   Em TODOS os outros casos: não retornar nada. Exemplos de casos que NÃO devem gerar retorno:
-   - Mortalidade <= 5%, com ou sem a frase: OK, silêncio.
-   - Mortalidade > 5% E a frase CONSTA no BS: OK, silêncio.
-   - Divergência leve entre calculado e declarado: OK, silêncio.
+   NÃO analise mortalidade. NÃO calcule percentual. NÃO verifique a frase de mortalidade. SILÊNCIO TOTAL sobre mortalidade.
+   Esse cálculo é feito pelo sistema automaticamente.
 
 4. MEDICAMENTOS: se não estiver na lista oficial: ALERTA. NÃO calcule carência.
 
@@ -287,7 +295,13 @@ VALIDAÇÕES:
 ORGANIZAÇÃO: agrupe por núcleo com aviários.
 
 Retorne SOMENTE JSON sem markdown:
-{"produtor":"","lote":"","data_abate":"","tem_problemas":false,"medicamentos_encontrados":[{"nome":"","data_fim":"dd/mm/aaaa ou null"}],"nucleos":[{"nucleo":"","aviarios":"","erros":[{"categoria":"GTA|Mortalidade|Campo","item":"","detalhe":""}],"alertas":[{"categoria":"GTA|Mortalidade|Medicamento|Campo","item":"","detalhe":""}]}]}"""
+{"produtor":"","lote":"","data_abate":"","tem_problemas":false,"medicamentos_encontrados":[{"nome":"","data_fim":"dd/mm/aaaa ou null"}],"mortalidade_dados":{"total_pintos":0,"remanescentes_1o":0,"programadas_1o":0,"tem_frase_5pct":false},"nucleos":[{"nucleo":"","aviarios":"","erros":[{"categoria":"GTA|Campo","item":"","detalhe":""}],"alertas":[{"categoria":"GTA|Medicamento|Campo","item":"","detalhe":""}]}]}
+
+Para mortalidade_dados:
+- total_pintos: soma de todos os pintos efetivamente alojados no BS
+- remanescentes_1o: número de aves remanescentes do PRIMEIRO carregamento
+- programadas_1o: número de aves programadas do PRIMEIRO carregamento
+- tem_frase_5pct: true se qualquer variação de "MORTALIDADE ACIMA DE 5%" aparecer no BS (incluindo "NÃO SENDO EM 72 HORAS", "POR ELIMINAÇÃO DE AVES REFUGO" etc.), false caso contrário"""
 
     def extract_text(f):
         doc = fitz.open(stream=f.read(), filetype="pdf")
