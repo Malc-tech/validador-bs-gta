@@ -267,17 +267,21 @@ VALIDAÇÕES:
    - Verificar apenas se a quantidade de linhas de GTA de pintos alojados é igual ao número de galpões declarado no BS. Se diferente: ALERTA.
 
 3. MORTALIDADE:
-   Fórmula: (total_pintos - remanescentes_1o - programadas_1o) / total_pintos * 100
-   - Se > 5% E sem a frase "MORTALIDADE ACIMA DE 5%" (incluindo "MORTALIDADE ACIMA DE 5% NÃO SENDO EM 72 HORAS") no BS: ERRO simples.
-   - Se <= 5% E com essa frase: ALERTA simples.
-   - Se valor divergir do declarado (arredondamentos): ALERTA simples.
+   Fórmula CORRETA: (total_pintos_alojados - aves_remanescentes_1o_carregamento - aves_programadas_1o_carregamento) / total_pintos_alojados * 100
+   ATENÇÃO: use os valores do PRIMEIRO carregamento para remanescentes e programadas. O total de pintos alojados é a SOMA de todos os pintos alojados do BS.
+   - Se mortalidade calculada > 5% E a frase "MORTALIDADE ACIMA DE 5%" (ou "MORTALIDADE ACIMA DE 5% NÃO SENDO EM 72 HORAS") NÃO constar no BS: ERRO simples, sem mostrar cálculos.
+   - Se mortalidade calculada <= 5%: não retornar nada, independente de ter ou não a frase no BS.
+   - Se mortalidade calculada > 5% E a frase CONSTAR no BS: não retornar nada, está correto.
+   - Se o valor calculado divergir levemente do declarado por arredondamento: não retornar nada.
 
 4. MEDICAMENTOS: se não estiver na lista oficial: ALERTA. NÃO calcule carência.
 
 5. CAMPOS OBRIGATÓRIOS ausentes: ERRO.
    Campos: nome estabelecimento, georreferenciamento, município/UF, cadastro SVO, lote/núcleo, nº galpões, médico veterinário CRMV, data alojamento, GTA pintos, nº pintos alojados, data carregamento, resultado salmonela.
 
-6. EXTRAÇÃO: inclua todos os medicamentos com nome e data_fim.
+6. RASTREABILIDADE PINTOS: verificar se a quantidade de linhas de GTA de pintos alojados é IGUAL ao número de galpões declarado no BS. Se igual: correto, não retornar nada. Se diferente: ALERTA.
+
+7. EXTRAÇÃO: inclua todos os medicamentos com nome e data_fim.
 
 ORGANIZAÇÃO: agrupe por núcleo com aviários.
 
