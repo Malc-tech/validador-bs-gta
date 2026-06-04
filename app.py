@@ -255,10 +255,11 @@ with aba1:
 Analise o BS e as GTAs. Retorne APENAS problemas encontrados. Itens corretos NÃO aparecem.
 
 VALIDAÇÕES:
-1. CRUZAMENTO BS x GTA (só GTAs fornecidas):
-   - Para cada GTA que EU ENVIEI: compare aves programadas no BS com TOTAL na GTA. Se diferente: ERRO. Compare aviário/núcleo. Se diferente: ERRO. Compare SIF destino na GTA. Se for diferente de 797: ERRO.
-   - Se uma GTA listada no BS NÃO foi enviada E o destino declarado no BS é SIF 797: ALERTA informando GTA faltante.
-   - Se uma GTA listada no BS NÃO foi enviada E o destino declarado no BS NÃO é SIF 797: ignorar completamente, não retornar nada.
+1. CRUZAMENTO BS x GTA:
+   REGRA PRINCIPAL: SE EU NÃO ENVIEI A GTA, NÃO FALE NADA SOBRE ELA. PONTO FINAL.
+   - GTA enviada por mim → verificar: aves programadas, aviário, SIF. Se divergir: ERRO.
+   - GTA NÃO enviada por mim, destino SIF 797 → ALERTA: GTA do SIF 797 não foi fornecida.
+   - GTA NÃO enviada por mim, destino qualquer outro SIF (1672, 4444, qualquer número diferente de 797) → SILÊNCIO TOTAL. Não mencionar. Não alertar. Não comentar. Ignorar completamente como se essa linha não existisse no BS.
 
 2. RASTREABILIDADE — GTA DOS PINTOS:
    - NÃO verificar se as GTAs dos pintos foram enviadas.
